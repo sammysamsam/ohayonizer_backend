@@ -87,60 +87,64 @@ def reversecomplement(s):
 
 def genstring(strand_length):
   attempt = 1
-  newstring = []
+  new_strand = []
   
-  while(attempt < 6) and (0 == len(newstring)):
-    newstring = []
-    for i in range(strand_length):
+  while(attempt < 6) and (0 == len(new_strand)):
+    new_strand = []
+    for i in range(strand_length): # this loop doesn't seem to be necessary; only the body does
               
       #find pentameric unit that hasnt been added
-      current_index = random.randint(0, len(fives) - 50)      
-      while (fives_present[current_index] or sevens_present[current_index]) and (current_index < len(fives)): 
-        current_index+=1
+      current_index = random.randint(0, len(fives)) # we don't need to generate a random int every time, probably
+                                                    # just randomize list beforehand
+      while (fives_present[current_index] or sevens_present[current_index]) and (current_index < len(fives)):
+        current_index += 1
+        # why does sevens_present need to be there? the indices wouldn't correspond to each other
 
       #Case: Found pentameric unit
       if (current_index < len(fives)): 
-        newstring = fives[current_index]
+        new_strand = fives[current_index]
        
-        k = 5
-        while (k < strand_length):       #while k < strand length 
+        curr_length = 5
+        while (curr_length < strand_length):
           
-          s = newstring[len(newstring) - 4:]     #get previous four bases for( _ _ _ _ + new base )
-          if (k >= 7):
-            t = newstring[len(newstring) - 6:]   #get previous six bases for( _ _ _ _ _ + new base )
+          s = new_strand[len(new_strand) - 4:]     #get previous four bases for( _ _ _ _ + new base )
+          if (curr_length >= 7):
+            t = new_strand[len(new_strand) - 6:]   #get previous six bases for( _ _ _ _ _ + new base )
           else:
             t = ''
             
-          goodones = []
+          good_ones = []
           for base in 'ACGT':
             pentameric_unit = s+base        # test pentameric unit
             septameric_unit = t+base        # test septameric unit
             
-            m = fives.index(pentameric_unit)  #find index of pentameric unit
-            if (not fives_present[m]) and ((7 > len(septameric_unit)) or (not sevensapprox(septameric_unit))) : #if pentameric unit is not added yet && seven unit does not exist
-              goodones.append(base)
+            m = fives.index(pentameric_unit)  # find index of pentameric unit
+            if (not fives_present[m]) and ((len(septameric_unit) < 7) or (not sevensapprox(septameric_unit))) : #if pentameric unit is not added yet && seven unit does not exist
+              good_ones.append(base)
 
-          if (0 < len(goodones)):
-            chosen_unit = random.choice(goodones)
-            newstring += chosen_unit  #ADD 
+          if (len(good_ones) > 0):
+            chosen_unit = random.choice(good_ones)
+            new_strand += chosen_unit  #ADD 
           else:
             k = strand_length # have to stop
-            newstring = []
+            new_strand = []
           k+= 1
 
-        newrev = reversecomplement(newstring)
-        updatefives(newrev)
-        updatesevens(newrev)
-        allstrings.append(newstring)
-        return newstring
+        new_rev_comp_strand = reversecomplement(new_strand)
+        update_fives(new_rev_comp_strand)
+        update_sevens(new_rev_comp_strand)
+        update_fives(new_strand) # added these two lines so that new string would be added to the used fives and sevens
+        update_sevens(new_strand)
+        allstrings.append(new_strand)
+        return new_strand
       else:
-        newstring = []
+        new_strand = []
   return "Could not generate a string in ", attempt, " attempts."
 
   
 
 # updates the fives data structure with the new string
-def updatefives(newstring):
+def update_fives(newstring):
   global fives_present
   for i in range(len(newstring)-4):
     s = newstring[i:i+5]
@@ -152,7 +156,7 @@ def updatefives(newstring):
     
 
 # updates the sevens data structure with the new string
-def updatesevens(newstring):
+def update_sevens(newstring):
   global sevens_present
   for i in range(len(newstring)-6):
     s = newstring[i:i+7]
