@@ -125,9 +125,9 @@ def genstring(strand_length):
                         chosen_unit = random.choice(good_ones)
                         new_strand += chosen_unit  #ADD 
                     else:
-                        k = strand_length # have to stop
+                        curr_length = strand_length # have to stop
                         new_strand = []
-                    k+= 1
+                    curr_length += 1
 
                 new_rev_comp_strand = reversecomplement(new_strand)
                 update_fives(new_rev_comp_strand)
@@ -173,7 +173,7 @@ sevens = []
 sevens_present = []
 allstrings = []
 
-n = 25 # size of strings
+n = 7 # size of strings
 
 # EXECUTION
 genfives()
