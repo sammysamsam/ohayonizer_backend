@@ -7,7 +7,7 @@ factors:
     - no symmetry
     - at least 5 nucleotides between junctions (per arm)
     - avoid alternating CGs and other purines and pyrmadines (3-4 )
-    - having CG on the ends of strands is optimal
+    - having CG on the ends of strands is optimal to prevent fraying
 
 approach:
     - using unique units (eliminates symmetry)
