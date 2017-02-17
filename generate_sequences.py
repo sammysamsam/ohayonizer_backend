@@ -132,7 +132,7 @@ def gen_string(strand_length):
         #find pentameric unit that hasnt been added
         current_index = random.randint(0, len(fives) - 1) # we don't need to generate a random int every time, probably
                                                     # just randomize list beforehand
-        current_index = 0
+        #current_index = 0
         while (current_index < len(fives)) and (fives_present[current_index] or sevens_present[current_index]):
             current_index += 1
             # why does sevens_present need to be there? the indices wouldn't correspond to each other
