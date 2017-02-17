@@ -184,6 +184,6 @@ for i in range(0, 45):
 
 
 x = [i for i in range(len(fives_present)) if  fives_present[i] ]
-print "number of fives that are present: ", len(x)
+print "number of fives that are present (including complements): ", len(x)
 x = [i for i in range(len(sevens_present)) if  sevens_present[i] ]
-print "number of sevens that are present: ", len(x)
+print "number of sevens that are present (including complements): ", len(x)
