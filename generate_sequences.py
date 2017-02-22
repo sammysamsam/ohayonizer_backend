@@ -30,8 +30,10 @@ def gen_restricted_sequences():
         for pyr1 in pyrimadines:
             for pur2 in purines:
                 for pyr2 in pyrimadines:
-                    restricted_sequences.append(pur1 + pyr1 + pur2 + pyr2)
-                    restricted_sequences.append(pyr1 + pur1 + pyr2 + pur2)
+                    for pur3 in purines:
+                        for pyr3 in pyrimadines:
+                            restricted_sequences.append(pur1 + pyr1 + pur2 + pyr2 + pur3 + pyr3)
+                            restricted_sequences.append(pyr1 + pur1 + pyr2 + pur2 + pur3 + pyr3)
 
 # generates all five pentameric units
 def genfives():
@@ -46,7 +48,7 @@ def genfives():
                         new_five = i1 + i2 + i3 + i4 + i5
                         restricted = False
                         fives.append(new_five)
-                        for sequence in restricted_sequences:
+                        for sequence in ['AAAA', 'TTTT', 'CCC', 'GGG'] :
                             if sequence in new_five:
                                 restricted = True
                                 fives_present.append(True)
@@ -219,7 +221,7 @@ genfives()
 num_restricted_fives = sum(fives_present)
 gensevens()
 num_restricted_sevens = sum(sevens_present)
-for i in range(0, 45):
+for i in range(43, 45):
     print gen_string(n)
 
 x = sum(fives_present) - num_restricted_fives
