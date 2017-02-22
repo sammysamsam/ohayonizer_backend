@@ -20,6 +20,14 @@
 
 import random
 
+def get_index(unit,units_list):
+    try:
+        return units_list.index(unit)
+    except ValueError:
+        return -1
+
+
+
 def gen_restricted_sequences():
     global restricted_sequences
     restricted_sequences = ['AAAA', 'TTTT', 'CCC', 'GGG'] # smallest prohibited repeats of each category
@@ -33,7 +41,7 @@ def gen_restricted_sequences():
                     for pur3 in purines:
                         for pyr3 in pyrimadines:
                             restricted_sequences.append(pur1 + pyr1 + pur2 + pyr2 + pur3 + pyr3)
-                            restricted_sequences.append(pyr1 + pur1 + pyr2 + pur2 + pur3 + pyr3)
+                            restricted_sequences.append(pyr1 + pur1 + pyr2 + pur2 + pyr3 + pur3)
 
 # generates all five pentameric units
 def genfives():
@@ -47,17 +55,16 @@ def genfives():
                     for i5 in lets:
                         new_five = i1 + i2 + i3 + i4 + i5
                         restricted = False
-                        fives.append(new_five)
                         for sequence in ['AAAA', 'TTTT', 'CCC', 'GGG'] :
                             if sequence in new_five:
                                 restricted = True
-                                fives_present.append(True)
                                 #print(new_five + " is restricted.")
                                 break
                         if not restricted:
+                            fives.append(new_five)
                             fives_present.append(False)
-    print("Length of fives: " + str(len(fives)) + "\nLength of fives_present: " + str(len(fives_present)))
-    print("Number of restricted sequences in all possible pentamers: " + str(sum(fives_present)))
+
+    print("Length of fives: " + str(len(fives)) )
 
 # generates all seven nucleotide units in order
 def gensevens():
@@ -73,30 +80,35 @@ def gensevens():
                             for i7 in lets:
                                 new_seven = i1 + i2 + i3 + i4 + i5 + i6 + i7
                                 restricted = False
-                                sevens.append(new_seven)
                                 for sequence in restricted_sequences:
                                     if sequence in new_seven:
                                         restricted = True
-                                        sevens_present.append(True)
                                         #print(new_seven + " is restricted.")
                                         break
                                 if not restricted:
+                                    sevens.append(new_seven)
                                     sevens_present.append(False)
-    print("Length of sevens: " + str(len(sevens)) + "\nLength of sevens_present: " + str(len(sevens_present)))
-    print("Number of restricted sequences in all possible pentamers: " + str(sum(sevens_present)))
+    print("Length of sevens: " + str(len(sevens)) + "\n")
 
 # sees whether the string of length seven is an approximate match
 # to an already present string in the sevens
 def sevensapprox(myseven):
     lets = "ACGT"
-    j = sevens.index(myseven)
+
+    j = get_index(myseven,sevens) 
+
+    if(j == -1):
+        return True
     if sevens_present[j]:
         return True
+
     i = 1
     while i < 6:
         for let in lets:
             new = myseven[:i] + let + myseven[i+1:]
-            j = sevens.index(new)
+
+            j = get_index(new,sevens)
+
             if sevens_present[j]:
                 print "sevens violation of ", myseven, " with ", new
                 return True
@@ -117,7 +129,11 @@ def reverse_complement(s):
         elif (let == 'T'):
             out+= 'A'
     return out
-    
+
+
+
+
+
 
 # generates a new string of size n that doesn't intersect with existing strings
 # those other strings are encoded in the fives
@@ -129,15 +145,15 @@ def gen_string(strand_length):
 
     while(attempt < 6) and (0 == len(new_strand)):
         new_strand = []
-        #for i in range(strand_length): # this loop doesn't seem to be necessary; only the body does
-              
+
+        #randomize list beforehand
+
         #find pentameric unit that hasnt been added
-        current_index = random.randint(0, len(fives) - 1) # we don't need to generate a random int every time, probably
-                                                    # just randomize list beforehand
+        current_index = 0
+        
         #current_index = 0
-        while (current_index < len(fives)) and (fives_present[current_index] or sevens_present[current_index]):
+        while (current_index < len(fives)) and (fives_present[current_index]):
             current_index += 1
-            # why does sevens_present need to be there? the indices wouldn't correspond to each other
 
         #Case: Found pentameric unit
         if (current_index < len(fives)): 
@@ -145,19 +161,21 @@ def gen_string(strand_length):
        
             curr_length = 5
             while (curr_length < strand_length):
-                s = new_strand[len(new_strand) - 4:]     #get previous four bases for( _ _ _ _ + new base )
+                
+                prev_4 = new_strand[len(new_strand) - 4:]     #get previous four bases for( _ _ _ _ + new base )
                 if (curr_length >= 7):
-                    t = new_strand[len(new_strand) - 6:]   #get previous six bases for( _ _ _ _ _ + new base )
+                    prev_6 = new_strand[len(new_strand) - 6:]   #get previous six bases for( _ _ _ _ _ + new base )
                 else:
-                    t = ''
+                    prev_6 = ''
             
                 good_ones = []
                 for base in 'ACGT':
-                    pentameric_unit = s+base        # test pentameric unit
-                    septameric_unit = t+base        # test septameric unit
+                    pentameric_unit = prev_4+base        # test pentameric unit
+                    septameric_unit = prev_6+base        # test septameric unit
             
-                    m = fives.index(pentameric_unit)  # find index of pentameric unit
-                    if (not fives_present[m]) and ((len(septameric_unit) < 7) or (not sevensapprox(septameric_unit))): #if pentameric unit is not added yet && seven unit does not exist
+                    m = get_index(pentameric_unit,fives)  # find index of pentameric unit
+
+                    if (m != -1) and (not fives_present[m]) and ((len(septameric_unit) < 7) or (not sevensapprox(septameric_unit))): #if pentameric unit is not added yet && seven unit does not exist
                         good_ones.append(base)
 
                 if (len(good_ones) > 0):
@@ -172,6 +190,7 @@ def gen_string(strand_length):
             new_rev_comp_strand = reverse_complement(new_strand)
             update_fives(new_rev_comp_strand)
             update_sevens(new_rev_comp_strand)
+
             update_fives(new_strand) # added these two lines so that new string would be added to the used fives and sevens
             update_sevens(new_strand)
             all_strings.append(new_strand)
@@ -213,7 +232,7 @@ sevens_present = []
 all_strings = []
 restricted_sequences = []
 
-n = 7 # size of strings
+n = 50 # size of strings
 
 # EXECUTION
 gen_restricted_sequences()
@@ -221,8 +240,11 @@ genfives()
 num_restricted_fives = sum(fives_present)
 gensevens()
 num_restricted_sevens = sum(sevens_present)
-for i in range(43, 45):
+for i in range(0, 5):
     print gen_string(n)
+    print("\n")
+
+
 
 x = sum(fives_present) - num_restricted_fives
 print "number of fives that are present (including complements): ", x
