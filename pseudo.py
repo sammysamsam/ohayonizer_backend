@@ -34,5 +34,7 @@ big picture:
 4. melting point per full strand or component ???
 
 """
-
-print("");
+l = ['a','b']
+b = l[:]
+l.append('c')
+print(b);
