@@ -1,30 +1,22 @@
-# This software designs strings that don't have reverse complements
-# of length five with other strings and that don't have groups of 7 
-# nucleotides with 6 in common.
-
-# For now, it makes no restriction about strings being complementary
-# to themselves nor does it forbid two strings from being
-# very similar. Please tell me what those constraints should be.
-
-
-
 """
 
+This software designs strand sequences, including its complements, with unique pentameric (5) and 
+septameric (7) units, i.e. AATCG & TAGGTCC.
 
-
-
-
-
-
+in addition:
+    - no polypurine (AAAA/TTTT) and  + CCC/GGG
+    - avoid alternating CGs and other purines and pyrmadines (3-4)
+    - no palindromic units
 """
 
 import random
-
 def gen_restricted_sequences():
     global restricted_sequences
     restricted_sequences = ['AAAA', 'TTTT', 'CCC', 'GGG'] # smallest prohibited repeats of each category
     pyrimadines = 'TC'
     purines = 'AG'
+
+
     # Generate alternating sequences
     for pur1 in purines:
         for pyr1 in pyrimadines:
@@ -34,6 +26,8 @@ def gen_restricted_sequences():
                         for pyr3 in pyrimadines:
                             restricted_sequences.append(pur1 + pyr1 + pur2 + pyr2 + pur3 + pyr3)
                             restricted_sequences.append(pyr1 + pur1 + pyr2 + pur2 + pyr3 + pur3)
+
+
 
 # generates all five pentameric units
 def genfives():
@@ -46,14 +40,16 @@ def genfives():
                     for i5 in lets:
                         new_five = i1 + i2 + i3 + i4 + i5
                         restricted = False
+                        
                         for sequence in ['AAAA', 'TTTT', 'CCC', 'GGG'] :
                             if sequence in new_five:
                                 restricted = True
                                 #print(new_five + " is restricted.")
                                 break
-                        if not restricted:
-                            fives[new_five] = False
 
+                        # NO PALINDROMES, POLYPURINES    
+                        if (not restricted) and (not new_five == new_five[::-1]) :
+                            fives[new_five] = False
     print("Length of fives: " + str(len(fives)) )
 
 # generates all seven nucleotide units in order
@@ -74,7 +70,9 @@ def gensevens():
                                         restricted = True
                                         #print(new_seven + " is restricted.")
                                         break
-                                if not restricted:
+                                
+                                # NO PALINDROMES, ALTERNATING PURINE-PYRIMIDINE (vice versa)
+                                if (not restricted) and (not new_seven== new_seven[::-1]):
                                     sevens[new_seven] = False
     print("Length of sevens: " + str(len(sevens)) + "\n")
 
@@ -127,7 +125,7 @@ def gen_string(strand_length, complement_exists):
     new_strand = []
 
     #ensure enough unadded units are available 
-    while(attempt < 6) and fives.values().count(False) > strand_length:
+    while(attempt < 2500) and fives.values().count(False) > strand_length:
         new_strand = []
 
         #randomize dictionary??
@@ -171,12 +169,13 @@ def gen_string(strand_length, complement_exists):
                 new_strand = []
             curr_length += 1
         
-        
+
         if len(new_strand) == strand_length:
+            print("order completed at attempt #: "+ str(attempt))                
             all_strings.append(new_strand)
             return new_strand
         else:
-            print("attempt failed: "+ str(attempt))     
+            #print("attempt failed: "+ str(attempt))     
             
             #undo changes to dictionary during failed attempt
             fives = saved_fives.copy()
@@ -190,6 +189,7 @@ def gen_string(strand_length, complement_exists):
 
 # updates the fives data structure with the new string
 def update_fives(new_unit,complement_exists):
+    global fives
     if(len(new_unit) == 5):
         if(complement_exists):
             new_reverse_unit = reverse_complement(new_unit)
@@ -198,6 +198,7 @@ def update_fives(new_unit,complement_exists):
     
 # updates the sevens data structure with the new string
 def update_sevens(new_unit,complement_exists):
+    global sevens
     if(len(new_unit) == 7):
         if(complement_exists):
             new_reverse_unit = reverse_complement(new_unit)
@@ -225,16 +226,15 @@ fives = {}
 sevens = {}
 all_strings = []
 restricted_sequences = []
-
 size_of_strand = 50
 
 gen_restricted_sequences()
 genfives()
 gensevens()
 
+
 for i in range(0, 10):
-    print gen_string(size_of_strand,False)
+    print gen_string(size_of_strand,True)
     print("pentameric units remaining:" + str(fives.values().count(False)))
     print("septameric units remaining:" + str(sevens.values().count(False)))   
-    print("\n")
 

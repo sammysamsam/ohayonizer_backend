@@ -2,11 +2,16 @@
 """
     
 factors:
-    - no polypurine (AAAA/TTTT) and  + CCC/GGG
-    - no branch migration in junctions
-    - no symmetry
+    - no polypurine (AAAA/TTTT) and  + CCC/GGG   (DONE)
+    - avoid alternating CGs and other purines and pyrmadines (3-4)    (DONE)  
+    - no palindromes (DONE)
+    
+    - no symmetry  (done???)
+    
+    - no branch migration in junctions 
+
     - at least 5 nucleotides between junctions (per arm)
-    - avoid alternating CGs and other purines and pyrmadines (3-4 )
+
     - having CG on the ends of strands is optimal to prevent fraying
 
 approach:
@@ -34,7 +39,8 @@ big picture:
 4. melting point per full strand or component ???
 
 """
-l = ['a','b']
-b = l[:]
-l.append('c')
-print(b);
+LOL = 'afdssafd'
+def chicken():
+	print(LOL)
+chicken()
+
