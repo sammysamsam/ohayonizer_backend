@@ -39,8 +39,4 @@ big picture:
 4. melting point per full strand or component ???
 
 """
-LOL = 'afdssafd'
-def chicken():
-	print(LOL)
-chicken()
 

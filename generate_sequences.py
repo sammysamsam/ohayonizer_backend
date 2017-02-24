@@ -7,6 +7,7 @@ in addition:
     - no polypurine (AAAA/TTTT) and  + CCC/GGG
     - avoid alternating CGs and other purines and pyrmadines (3-4)
     - no palindromic units
+
 """
 
 import random
@@ -102,7 +103,7 @@ def get_next_base(prev_4,prev_6,complement_exists):
         septameric_unit = prev_6+base        # test septameric unit
 
         p_ = fives.get(pentameric_unit,'none')  # pentameric unit exists
-        s_ = sevens.get(septameric_unit,'none') #septameric unit exists
+        s_ = sevens.get(septameric_unit,'none') # septameric unit exists
  
         if (not p_) and ((not s_) or (len(septameric_unit) != 7 )): #if pentameric unit is not added yet && seven unit does not exist
             next_possible_bases.append(base)
@@ -125,19 +126,23 @@ def gen_string(strand_length, complement_exists):
     new_strand = []
 
     #ensure enough unadded units are available 
-    while(attempt < 2500) and fives.values().count(False) > strand_length:
+    while(attempt < 1000) and fives.values().count(False) > strand_length:
         new_strand = []
 
-        #randomize dictionary??
+        #randomize dictionary
+        key_list = fives.keys()
+        random.shuffle(key_list)
 
 
-        #get first pentameric unit and add unit         
-        for seq,exist in fives.iteritems():
+        #get first pentameric unit and add unit 
+        for key in key_list:
+            exist = fives[key]
             if(not exist):
-                new_pentameric_unit = seq
+                new_pentameric_unit = key
                 break
         fives[new_pentameric_unit] = True
         curr_length = 5
+
 
         #build rest of strand
         new_strand = new_pentameric_unit
@@ -171,6 +176,7 @@ def gen_string(strand_length, complement_exists):
         
 
         if len(new_strand) == strand_length:
+            update_all_fives_sevens(new_strand,complement_exists)
             print("order completed at attempt #: "+ str(attempt))                
             all_strings.append(new_strand)
             return new_strand
@@ -185,6 +191,19 @@ def gen_string(strand_length, complement_exists):
     return "Could not generate a string in ", attempt, " attempts."
   
 
+def update_all_fives_sevens(sequence,complement_exists):
+    global fives 
+    global sevens
+    if(complement_exists):
+        for i in range(len(sequence)-4):
+            five = sequence[i:i+5]
+            fives[five] = True
+
+        for d in range(len(sequence)-6):
+            sev = sequence[d:d+7]
+            sevens[sev] = True
+
+
 
 
 # updates the fives data structure with the new string
@@ -192,30 +211,46 @@ def update_fives(new_unit,complement_exists):
     global fives
     if(len(new_unit) == 5):
         if(complement_exists):
-            new_reverse_unit = reverse_complement(new_unit)
-            fives[new_reverse_unit] = True
-        fives[new_unit] = True
-    
+            fives[new_unit] = True
+
+        new_reverse_unit = reverse_complement(new_unit)
+        fives[new_reverse_unit] = True
+
+
+
+
 # updates the sevens data structure with the new string
 def update_sevens(new_unit,complement_exists):
     global sevens
     if(len(new_unit) == 7):
         if(complement_exists):
-            new_reverse_unit = reverse_complement(new_unit)
-            update_sevens(new_reverse_unit,False)
-    sevens[new_unit] = True
-   
-    #sevens approx added
-    lets = "ACGT"
-    i = 1
-    while i < 6:
-        for let in lets:
-            new = new_unit[:i] + let + new_unit[i+1:]
+            
+            sevens[new_unit] = True
 
-            # if unit exists and has not been used yet
-            if( sevens.get(new,'none') != 'none' and (not sevens[new])):
-                sevens[new] = True
-        i+=1
+            #sevens approx added
+            lets = "ACGT"
+            i = 1
+            while i < 6:
+                for let in lets:
+                    new = new_unit[:i] + let + new_unit[i+1:]
+
+                    # if unit exists and has not been used yet
+                    if( sevens.get(new,'none') != 'none' and (not sevens[new])):
+                        sevens[new] = True
+                i+=1
+        new_reverse_unit = reverse_complement(new_unit)            
+        sevens[new_reverse_unit]
+
+        #sevens approx added    
+        lets = "ACGT"
+        i = 1
+        while i < 6:
+            for let in lets:
+                new = new_unit[:i] + let + new_unit[i+1:]
+                if( sevens.get(new,'none') != 'none' and (not sevens[new])):
+                    sevens[new] = True
+            i+=1
+
 
 
 
