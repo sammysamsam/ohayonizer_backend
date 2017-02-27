@@ -15,12 +15,19 @@ factors:
     - having CG on the ends of strands is optimal to prevent fraying
 
 approach:
-    - using unique units (eliminates symmetry)
+    - using unique units (eliminates symmetry) 
     - junction flanking pairs (eliminates branch migration)
 
 
 
+steps:
 
+   - 
+
+
+
+
+   
 user input:
 
 list of desired strand components + length + "blueprint/partially filled in sequence"

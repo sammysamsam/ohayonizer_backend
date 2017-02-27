@@ -1,16 +1,21 @@
 """
 
-This software designs strand sequences, including its complements, with unique pentameric (5) and 
+This software designs strand sequences, including its Zx[ bvcx complements, with unique pentameric (5) and 
 septameric (7) units, i.e. AATCG & TAGGTCC.
+
 
 in addition:
     - no polypurine (AAAA/TTTT) and  + CCC/GGG
     - avoid alternating CGs and other purines and pyrmadines (3-4)
     - no palindromic units
-
 """
 
+
 import random
+from strand_utilities import strand_utilities
+util = strand_utilities()
+
+
 def gen_restricted_sequences():
     global restricted_sequences
     restricted_sequences = ['AAAA', 'TTTT', 'CCC', 'GGG'] # smallest prohibited repeats of each category
@@ -27,8 +32,6 @@ def gen_restricted_sequences():
                         for pyr3 in pyrimadines:
                             restricted_sequences.append(pur1 + pyr1 + pur2 + pyr2 + pur3 + pyr3)
                             restricted_sequences.append(pyr1 + pur1 + pyr2 + pur2 + pyr3 + pur3)
-
-
 
 # generates all five pentameric units
 def genfives():
@@ -77,25 +80,14 @@ def gensevens():
                                     sevens[new_seven] = False
     print("Length of sevens: " + str(len(sevens)) + "\n")
 
-# take reverse complement of DNA
-def reverse_complement(s):
-    srev = s[::-1]
-    out = ''
-    for let in srev:
-        if (let == 'A'):
-            out+= 'T'
-        elif (let == 'C'):
-            out+= 'G'
-        elif (let == 'G'):
-            out+= 'C'
-        elif (let == 'T'):
-            out+= 'A'
-    return out
 
 
 
 
-def get_next_base(prev_4,prev_6,complement_exists):
+
+
+
+def get_next_base(prev_4,prev_6):
     next_possible_bases = []
 
     for base in 'ACGT':
@@ -103,17 +95,40 @@ def get_next_base(prev_4,prev_6,complement_exists):
         septameric_unit = prev_6+base        # test septameric unit
 
         p_ = fives.get(pentameric_unit,'none')  # pentameric unit exists
-        s_ = sevens.get(septameric_unit,'none') # septameric unit exists
+        s_ = sevens.get(septameric_unit,'none') #septameric unit exists
  
         if (not p_) and ((not s_) or (len(septameric_unit) != 7 )): #if pentameric unit is not added yet && seven unit does not exist
             next_possible_bases.append(base)
     return next_possible_bases
 
 
+
+def get_first_five_bases(blueprint):
+    possibilities = util.get_pentameric_possiblilities(blueprint[0:5])
+    if(len(possibilities)==0):
+        print("no possibilities for first five bases")
+        return "none"
+
+    random.shuffle(possibilities)
+    return possibilities[0]
+
+
+
+
+def process_blueprint(strand_length, blueprint):
+    if(len(blueprint) == 0):
+        return blueprint.ljust(strand_length, 'o')
+    else:
+        return blueprint
+
+
+
+
+
 # generates a new string of size n that doesn't intersect with existing strings
 # those other strings are encoded in the fives
 
-def gen_string(strand_length, complement_exists):
+def gen_string(strand_length,blueprint, complement_exists):
     global all_strings
     global fives
     global sevens
@@ -121,31 +136,20 @@ def gen_string(strand_length, complement_exists):
     #used for revert fives and sevens dictionary after failed attempts
     saved_fives = fives.copy()
     saved_sevens = sevens.copy()
+    blueprint = process_blueprint(strand_length, blueprint)
 
     attempt = 1
     new_strand = []
 
+    #check if algorithm can start with building first five bases
+    starting_bases = get_first_five_bases(blueprint)
+
+
     #ensure enough unadded units are available 
-    while(attempt < 1000) and fives.values().count(False) > strand_length:
-        new_strand = []
-
-        #randomize dictionary
-        key_list = fives.keys()
-        random.shuffle(key_list)
-
-
-        #get first pentameric unit and add unit 
-        for key in key_list:
-            exist = fives[key]
-            if(not exist):
-                new_pentameric_unit = key
-                break
-        fives[new_pentameric_unit] = True
+    while(attempt < 2500) and fives.values().count(False) > strand_length and len(starting_bases) == 5:
+        
+        new_strand = starting_bases
         curr_length = 5
-
-
-        #build rest of strand
-        new_strand = new_pentameric_unit
         while (curr_length < strand_length):
             
             #get previous four bases for( _ _ _ _ + new base )
@@ -158,13 +162,13 @@ def gen_string(strand_length, complement_exists):
                 prev_6 = ''
 
             #get next possible base
-            next_possible_bases = get_next_base(prev_4,prev_6,complement_exists)
-
+            next_possible_bases = get_next_base(prev_4,prev_6)
 
             #CASE: add possible base (CONTINUE)
             if (len(next_possible_bases) > 0):
                 chosen_unit = random.choice(next_possible_bases)
                 new_strand += chosen_unit  
+
                 update_fives(prev_4+chosen_unit, complement_exists)
                 update_sevens(prev_6+chosen_unit, complement_exists)
 
@@ -176,8 +180,10 @@ def gen_string(strand_length, complement_exists):
         
 
         if len(new_strand) == strand_length:
+            print("order completed at attempt #: "+ str(attempt))     
+            
             update_all_fives_sevens(new_strand,complement_exists)
-            print("order completed at attempt #: "+ str(attempt))                
+
             all_strings.append(new_strand)
             return new_strand
         else:
@@ -190,6 +196,11 @@ def gen_string(strand_length, complement_exists):
 
     return "Could not generate a string in ", attempt, " attempts."
   
+
+
+
+
+
 
 def update_all_fives_sevens(sequence,complement_exists):
     global fives 
@@ -213,7 +224,7 @@ def update_fives(new_unit,complement_exists):
         if(complement_exists):
             fives[new_unit] = True
 
-        new_reverse_unit = reverse_complement(new_unit)
+        new_reverse_unit = util.reverse_complement(new_unit)
         fives[new_reverse_unit] = True
 
 
@@ -238,7 +249,7 @@ def update_sevens(new_unit,complement_exists):
                     if( sevens.get(new,'none') != 'none' and (not sevens[new])):
                         sevens[new] = True
                 i+=1
-        new_reverse_unit = reverse_complement(new_unit)            
+        new_reverse_unit = util.reverse_complement(new_unit)            
         sevens[new_reverse_unit]
 
         #sevens approx added    
@@ -250,7 +261,6 @@ def update_sevens(new_unit,complement_exists):
                 if( sevens.get(new,'none') != 'none' and (not sevens[new])):
                     sevens[new] = True
             i+=1
-
 
 
 
@@ -269,7 +279,7 @@ gensevens()
 
 
 for i in range(0, 10):
-    print gen_string(size_of_strand,True)
+    print gen_string(size_of_strand,"",True)
     print("pentameric units remaining:" + str(fives.values().count(False)))
     print("septameric units remaining:" + str(sevens.values().count(False)))   
 
