@@ -13,7 +13,7 @@ class strand_utilities:
 	        elif (let == 'G'):
 	            out+= 'C'
 	        elif (let == 'T'):
-	            out+= 'A'
+	        	out+= 'A'
 	    return out
 
 	#get one random base
@@ -36,12 +36,16 @@ class strand_utilities:
 	if palindromes are only found, it returns array with palindromes
 
 	"""
+	def get_restriction_score(e, seq,restricted_sequences):
+		score = 0
+		for res in restricted_sequences:
+			if res in seq:
+				score +=1
+		return score
+
 	def get_pentameric_possiblilities(e, blueprint):
-		restricted_seq = ['AAAA', 'TTTT', 'CCC', 'GGG','CCCC','GGGG','TTTTT','AAAAA']
-		init_score = 0
-		for res in restricted_seq:
-			if res in blueprint:
-				init_score += 1
+		res_seq = ['AAAA', 'TTTT', 'CCC', 'GGG','CCCC','GGGG','CCCCC','GGGGG','TTTTT','AAAAA']
+		init_score = strand_utilities.get_restriction_score(e,blueprint,res_seq)
 
 		results = []
 		palim_results = []
@@ -53,17 +57,15 @@ class strand_utilities:
 					lets.append("ATCG")
 				else:
 					lets.append(blueprint[i])
-
+			
 			for i1 in lets[0]:
 				for i2 in lets[1]:
 					for i3 in lets[2]:
 						for i4 in lets[3]:
 							for i5 in lets[4]:
+								
 								new_five = i1 + i2 + i3 + i4 + i5
-								new_score = 0
-								for sequence in restricted_seq:
-									if sequence in new_five:
-										new_score+=1
+								new_score = strand_utilities.get_restriction_score(e,new_five,res_seq)
 								
 								if (new_score == init_score):
 									if (new_five == new_five[::-1]):

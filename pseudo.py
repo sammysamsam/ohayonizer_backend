@@ -19,7 +19,6 @@ approach:
     - junction flanking pairs (eliminates branch migration)
 
 
-
 steps:
 
    - 
@@ -46,4 +45,3 @@ big picture:
 4. melting point per full strand or component ???
 
 """
-
