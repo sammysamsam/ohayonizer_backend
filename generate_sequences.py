@@ -173,7 +173,7 @@ def gen_string(strand_length,blueprint, complement_exists):
 
     #ensure enough unadded units are available 
     attempt = 1
-    while(attempt < 2500) and fives.values().count(False) > strand_length and len(starting_bases) == 5:
+    while(attempt < 2500) and list(fives.values()).count(False) > strand_length and len(starting_bases) == 5:
         
         new_strand = starting_bases
         curr_length = 5
@@ -292,13 +292,16 @@ gen_restricted_sequences()
 genfives()
 gensevens()
 
-test = gen_string(30,"CCoATooooAAAoooooooATTooGGGGGo",True)
-test2 = gen_string(30,"oCCCooooooooooooooATTooGGGGGGo",True)
+test_str = "CCoATooooAAAoooooooATTooGGGGGo"
+test_str_2 = "oCCCooooooooooooooATTooGGGGGGo"
+test = gen_string(30,test_str, True)
+test2 = gen_string(30, test_str_2, True)
+print(test_str)
 print(test)
+print(test_str_2)
 print(test2)
 
 """
-
 for i in range(0, 10):
     print gen_string(size_of_strand,"",True)
     print("pentameric units remaining:" + str(fives.values().count(False)))

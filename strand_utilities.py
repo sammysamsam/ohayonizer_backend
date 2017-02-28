@@ -1,81 +1,81 @@
 import random
 class strand_utilities:
 
-	# take reverse complement of DNA
-	def reverse_complement(e, s):
-	    srev = s[::-1]
-	    out = ''
-	    for let in srev:
-	        if (let == 'A'):
-	            out+= 'T'
-	        elif (let == 'C'):
-	            out+= 'G'
-	        elif (let == 'G'):
-	            out+= 'C'
-	        elif (let == 'T'):
-	        	out+= 'A'
-	    return out
+    # take reverse complement of DNA
+    def reverse_complement(e, s):
+        srev = s[::-1]
+        out = ''
+        for let in srev:
+            if (let == 'A'):
+                out+= 'T'
+            elif (let == 'C'):
+                out+= 'G'
+            elif (let == 'G'):
+                out+= 'C'
+            elif (let == 'T'):
+                out+= 'A'
+        return out
 
-	#get one random base
-	def random_base():
-		baselist = ['A','T','C','G']
-		return random.choice(baselist)
+    #get one random base
+    def random_base():
+        baselist = ['A','T','C','G']
+        return random.choice(baselist)
 
 
-	#get random sequence with given length
-	def random_sequence(length):
-		seq = ""
-		for i in range(1,length):
-			seq += random_base();
-		return seq
+    #get random sequence with given length
+    def random_sequence(length):
+        seq = ""
+        for i in range(1,length):
+            seq += random_base();
+        return seq
 
-	"""
-	Based on a given blueprint, it returns an array of possible sequences that dont violate or worsen 
-	number of restricted sequences.
+    """
+    Based on a given blueprint, it returns an array of possible sequences that dont violate or worsen 
+    number of restricted sequences.
 
-	if palindromes are only found, it returns array with palindromes
+    if palindromes are only found, it returns array with palindromes
 
-	"""
-	def get_restriction_score(e, seq,restricted_sequences):
-		score = 0
-		for res in restricted_sequences:
-			if res in seq:
-				score +=1
-		return score
+    """
+    def get_restriction_score(e, seq,restricted_sequences):
+        score = 0
+        for res in restricted_sequences:
+            if res in seq:
+                score +=1
+        return score
 
-	def get_pentameric_possiblilities(e, blueprint):
-		res_seq = ['AAAA', 'TTTT', 'CCC', 'GGG','CCCC','GGGG','CCCCC','GGGGG','TTTTT','AAAAA']
-		init_score = strand_utilities.get_restriction_score(e,blueprint,res_seq)
+    def get_pentameric_possiblilities(e, blueprint):
+        res_seq = ['AAAA', 'TTTT', 'CCC', 'GGG','CCCC','GGGG','CCCCC','GGGGG','TTTTT','AAAAA']
+        init_score = strand_utilities.get_restriction_score(e,blueprint,res_seq)
 
-		results = []
-		palim_results = []
-		if(len(blueprint) == 5):
-			lets = []
+        results = []
+        palim_results = []
+        if(len(blueprint) == 5):
+            lets = []
 
-			for i in range(0,5):
-				if(blueprint[i] == 'o'):
-					lets.append("ATCG")
-				else:
-					lets.append(blueprint[i])
-			
-			for i1 in lets[0]:
-				for i2 in lets[1]:
-					for i3 in lets[2]:
-						for i4 in lets[3]:
-							for i5 in lets[4]:
-								
-								new_five = i1 + i2 + i3 + i4 + i5
-								new_score = strand_utilities.get_restriction_score(e,new_five,res_seq)
-								
-								if (new_score == init_score):
-									if (new_five == new_five[::-1]):
-										palim_results.append(new_five)
-									else:
-										results.append(new_five)
-			if(len(results) != 0):
-				return results
-			else:
-				return palim_results
+            for i in range(0,5):
+                if(blueprint[i] == 'o'):
+                    lets.append("ATCG")
+                else:
+                    lets.append(blueprint[i])
+            
+            for i1 in lets[0]:
+                for i2 in lets[1]:
+                    for i3 in lets[2]:
+                        for i4 in lets[3]:
+                            for i5 in lets[4]:
+                                
+                                new_five = i1 + i2 + i3 + i4 + i5
+                                new_score = strand_utilities.get_restriction_score(e,new_five,res_seq)
+                                
+                                if (new_score == init_score):
+                                    if (new_five == new_five[::-1]):
+                                        palim_results.append(new_five)
+                                    else:
+                                        results.append(new_five)
+            if(len(results) != 0):
+                return results
+            else:
+                return palim_results
 
 """
 
