@@ -36,11 +36,13 @@ class strand_utilities:
     if palindromes are only found, it returns array with palindromes
 
     """
-    def get_restriction_score(e, seq,restricted_sequences):
+    def get_restriction_score(e, seq, restricted_sequences):
         score = 0
         for res in restricted_sequences:
-            if res in seq:
-                score +=1
+            if res in seq: # if res is a substring of seq
+                print('Restricted sequence found')
+                print('Substring of current string ' + seq + ' is ' + res)
+                score += 1
         return score
 
     def get_pentameric_possiblilities(e, blueprint):

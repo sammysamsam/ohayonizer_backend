@@ -82,8 +82,28 @@ def gensevens():
 
 #####################
 
+'''
+A better way to get next base:
+Take the blueprint and keeps track of all the violations up to an index value iterating through the blueprint,
+then checks if it increases when you add a base. If it does, use another base instead.
 
-def get_next_base(prev_4,prev_6,blueprint,index):
+oooooooggooo
+blueprint violation array: all 0s (no violations)
+during string generation, if we put in:
+    oooooogggooo
+then the number of violations will be greater than in the blueprint violation array
+
+now the blueprint array has:
+    ooogggooo
+now the blueprint violation array will look like: [0, 0, 0, 0, 0, 1, 1, 1, 1, 1]
+
+another example:
+ooogggaaaaooo
+now the blueprint violation array will be: [0,0,0,0,0,1,1,1,1,2,2,2,2,2,2]
+
+'''
+
+def get_next_base(prev_4, prev_6, blueprint, index):
     five_restricted = ['AAAA', 'TTTT', 'CCC', 'GGG','CCCC','GGGG','CCCCC','GGGGG','TTTTT','AAAAA']    
     global restricted_sequences
     next_possible_bases = []
@@ -94,38 +114,45 @@ def get_next_base(prev_4,prev_6,blueprint,index):
 
     #blueprint contains specific bases in current pentameric unit
 
-    if(blueprint[index - 4:index] != "oooo" ):
+    if(blueprint[(index - 4):index] != "oooo" ):
         init_score = 0
         if(len(prev_4) == 4):
-            init_score = util.get_restriction_score(prev_4,five_restricted)
+            init_score += util.get_restriction_score(prev_4, five_restricted)
         if(len(prev_6) == 6):
-            init_score += util.get_restriction_score(prev_6,restricted_sequences)
+            init_score += util.get_restriction_score(prev_6, restricted_sequences)
 
-        for base in 'ACGT':
-           
-            pentameric_unit = prev_4+base  # test pentameric unit
-            septameric_unit = prev_6+base  # test septameric unit
+    for base in 'ACGT':
+       
+        pentameric_unit = prev_4 + base  # test pentameric unit
+        septameric_unit = prev_6 + base  # test septameric unit
+
+        p_ = fives.get(pentameric_unit, True)  # pentameric unit exists
+        s_ = sevens.get(septameric_unit, True) # septameric unit exists
+        
+        comp_bad = False
+        if complement_desired:
+            five_comp = util.reverse_complement(pentameric_unit)
+            comp_bad = comp_bad or fives.get(five_comp, True)
+            seven_comp = util.reverse_complement(septameric_unit)
+            comp_bad = comp_bad or sevens.get(seven_comp, True)
+        if comp_bad: # Bad base for complement
+            continue
+        # if we have two strands and they are not complementary, how similar can they be
+
+        if(blueprint[(index - 4):index] != "oooo" ):
             new_score = 0
 
             if(len(prev_4) == 4):
-                new_score = util.get_restriction_score(pentameric_unit,five_restricted)
+                new_score += util.get_restriction_score(pentameric_unit, five_restricted)
             if(len(prev_6) == 6):
-                new_score += util.get_restriction_score(septameric_unit,restricted_sequences)
+                new_score += util.get_restriction_score(septameric_unit, restricted_sequences)
 
-            if(new_score == init_score):
+            if (new_score == init_score) and (not p_) and ((not s_) or (len(septameric_unit) != 7 )) : #if pentameric unit is not added yet && seven unit does not exist
                 next_possible_bases.append(base)
 
     #blueprint does not contain specific bases in current pentameric unit
 
-    else:
-        for base in 'ACGT':
-           
-            pentameric_unit = prev_4+base           # test pentameric unit
-            septameric_unit = prev_6+base           # test septameric unit
-
-            p_ = fives.get(pentameric_unit,'none')  # pentameric unit exists
-            s_ = sevens.get(septameric_unit,'none') # septameric unit exists
-     
+        else:
             if (not p_) and ((not s_) or (len(septameric_unit) != 7 )) : #if pentameric unit is not added yet && seven unit does not exist
                 next_possible_bases.append(base)
     return next_possible_bases
@@ -138,10 +165,9 @@ def get_first_five_bases(blueprint):
         print("no possibilities for first five bases")
         return "none"
 
-    random.shuffle(possibilities)
-    return possibilities[0]
-
-
+    #random.shuffle(possibilities)
+    #return possibilities[0]
+    return random.choice(possibilities)
 
 
 def process_blueprint(strand_length, blueprint):
@@ -157,7 +183,7 @@ def process_blueprint(strand_length, blueprint):
 # generates a new string of size n that doesn't intersect with existing strings
 # those other strings are encoded in the fives
 
-def gen_string(strand_length,blueprint, complement_exists):
+def gen_string(strand_length, blueprint, complement_desired):
     global all_strings
     global fives
     global sevens
@@ -170,10 +196,14 @@ def gen_string(strand_length,blueprint, complement_exists):
 
     #check if algorithm can start with building first five bases
     starting_bases = get_first_five_bases(blueprint)
+    if len(starting_bases) == 0:
+        print('No starting bases given constraints of blueprint.')
+        return
 
     #ensure enough unadded units are available 
     attempt = 1
-    while(attempt < 2500) and list(fives.values()).count(False) > strand_length and len(starting_bases) == 5:
+    #if list(fives.values()).count(False) > strand_length
+    while(attempt < 2500):
         
         new_strand = starting_bases
         curr_length = 5
@@ -184,18 +214,18 @@ def gen_string(strand_length,blueprint, complement_exists):
 
             #get previous six bases for( _ _ _ _ _ + new base )       
             prev_6 = ''
-            if (curr_length >= 7):
+            if curr_length >= 7:
                 prev_6 = new_strand[len(new_strand) - 6:] 
 
             #get next possible base
-            next_possible_bases = get_next_base(prev_4,prev_6,blueprint,curr_length)
+            next_possible_bases = get_next_base(prev_4, prev_6, blueprint, curr_length)
 
             #CASE: add possible base (CONTINUE)
-            if (len(next_possible_bases) > 0):
+            if len(next_possible_bases) > 0:
                 chosen_unit = random.choice(next_possible_bases)
                 new_strand += chosen_unit  
-                update_fives(prev_4+chosen_unit, complement_exists)
-                update_sevens(prev_6+chosen_unit, complement_exists)
+                update_fives(prev_4 + chosen_unit, complement_desired)
+                update_sevens(prev_6 + chosen_unit, complement_desired)
 
             #CASE: no possible base (STOP)
             else:
@@ -204,8 +234,8 @@ def gen_string(strand_length,blueprint, complement_exists):
             curr_length += 1
         
         if len(new_strand) == strand_length:
-            print("order completed at attempt #: "+ str(attempt))     
-            update_all_fives_sevens(new_strand,complement_exists)
+            print("order completed at attempt #: " + str(attempt))     
+            update_all_fives_sevens(new_strand, complement_desired)
             all_strings.append(new_strand)
             return new_strand
         else:
@@ -214,7 +244,7 @@ def gen_string(strand_length,blueprint, complement_exists):
             #undo changes to dictionary during failed attempt
             fives = saved_fives.copy()
             sevens = saved_sevens.copy()
-            attempt +=1
+            attempt += 1
 
     return "Could not generate a string in ", attempt, " attempts."
   
@@ -224,10 +254,10 @@ def gen_string(strand_length,blueprint, complement_exists):
 #####################
 
 
-def update_all_fives_sevens(sequence,complement_exists):
+def update_all_fives_sevens(sequence,complement_desired):
     global fives 
     global sevens
-    if(complement_exists):
+    if(complement_desired):
         for i in range(len(sequence)-4):
             five = sequence[i:i+5]
             if(five in fives):
@@ -239,44 +269,39 @@ def update_all_fives_sevens(sequence,complement_exists):
                 sevens[sev] = True
 
 
-
-
 # updates the fives data structure with the new string
-def update_fives(new_unit,complement_exists):
+def update_fives(new_unit, complement_desired):
     global fives
-    if(len(new_unit) == 5):
-        if(complement_exists and (new_unit in fives)):
+    if len(new_unit) == 5:
+        if complement_desired:
             fives[new_unit] = True
 
         new_reverse_unit = util.reverse_complement(new_unit)
-        if( new_reverse_unit in fives):
-            fives[new_reverse_unit] = True
+        fives[new_reverse_unit] = True
 
 
 # updates the sevens data structure with the new string
-def update_sevens(new_unit,complement_exists):
+def update_sevens(new_unit, complement_desired):
     global sevens
-    if(len(new_unit) == 7):
-        if(complement_exists and (new_unit in sevens)):
-            sevens[new_unit] = True
+    if len(new_unit) == 7:
+        if complement_desired:
             add_sevens_approx(new_unit)
 
         new_reverse_unit = util.reverse_complement(new_unit)       
-        if(new_reverse_unit in sevens):     
-            sevens[new_reverse_unit]
-
         add_sevens_approx(new_reverse_unit)
 
 def add_sevens_approx(new_unit):
-        global sevens
-        lets = "ACGT"
-        i = 1
-        while i < 6:
-            for let in lets:
-                new = new_unit[:i] + let + new_unit[i+1:]
-                if( new in sevens and (not sevens[new])):
-                    sevens[new] = True
-            i+=1
+    global sevens
+    lets = "ACGT"
+    i = 1
+    while i < 6:
+        for let in lets:
+            new = new_unit[:i] + let + new_unit[i + 1:]
+            if new in sevens and (not sevens[new]):
+                sevens[new] = True
+        i += 1
+
+#Include all restricted sequences in the dictionary from the start
 
 
 
