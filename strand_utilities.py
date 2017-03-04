@@ -1,6 +1,34 @@
 import random
 class strand_utilities:
 
+
+    five_restricted_seq = ['AAAA', 'TTTT', 'CCC', 'GGG','CCCC','GGGG','CCCCC','GGGGG','TTTTT','AAAAA']
+    full_restricted_seq = []
+
+    def __init__(self):
+        self.gen_full_restricted_sequences()
+
+
+    def gen_full_restricted_sequences(self):
+        restricted_sequences = ['AAAA', 'TTTT', 'CCC', 'GGG'] # smallest prohibited repeats of each category
+        pyrimadines = 'TC'
+        purines = 'AG'
+
+        # Generate alternating sequences
+        for pur1 in purines:
+            for pyr1 in pyrimadines:
+                for pur2 in purines:
+                    for pyr2 in pyrimadines:
+                        for pur3 in purines:
+                            for pyr3 in pyrimadines:
+                                restricted_sequences.append(pur1 + pyr1 + pur2 + pyr2 + pur3 + pyr3)
+                                restricted_sequences.append(pyr1 + pur1 + pyr2 + pur2 + pyr3 + pur3)
+        #print(restricted_sequences)
+        self.full_restricted_seq = restricted_sequences
+
+
+############################################
+
     # take reverse complement of DNA
     def reverse_complement(e, s):
         srev = s[::-1]
@@ -39,15 +67,20 @@ class strand_utilities:
     def get_restriction_score(e, seq, restricted_sequences):
         score = 0
         for res in restricted_sequences:
-            if res in seq: # if res is a substring of seq
-                print('Restricted sequence found')
-                print('Substring of current string ' + seq + ' is ' + res)
-                score += 1
+                if res in seq:
+                    #print('Restricted sequence found')
+                    #print('Substring of current string ' + seq + ' is ' + res)
+                    score += 1
         return score
 
-    def get_pentameric_possiblilities(e, blueprint):
-        res_seq = ['AAAA', 'TTTT', 'CCC', 'GGG','CCCC','GGGG','CCCCC','GGGGG','TTTTT','AAAAA']
-        init_score = strand_utilities.get_restriction_score(e,blueprint,res_seq)
+
+
+
+###################
+
+
+    def get_pentameric_possiblilities(self, blueprint):
+        init_score = strand_utilities.get_restriction_score(self, blueprint, self.five_restricted_seq)
 
         results = []
         palim_results = []
@@ -67,7 +100,7 @@ class strand_utilities:
                             for i5 in lets[4]:
                                 
                                 new_five = i1 + i2 + i3 + i4 + i5
-                                new_score = strand_utilities.get_restriction_score(e,new_five,res_seq)
+                                new_score = strand_utilities.get_restriction_score(self,new_five,self.five_restricted_seq)
                                 
                                 if (new_score == init_score):
                                     if (new_five == new_five[::-1]):
@@ -83,7 +116,7 @@ class strand_utilities:
 
 #TEST AREA 
 
-util = strand_utilities()
+
 
 x = util.get_pentameric_possiblilities("GGGGG")
 print(x)
@@ -91,4 +124,3 @@ print(x)
 
 
 """
-

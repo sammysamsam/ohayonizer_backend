@@ -13,24 +13,10 @@ in addition:
 
 import random
 from strand_utilities import strand_utilities
+
 util = strand_utilities()
 
 
-def gen_restricted_sequences():
-    global restricted_sequences
-    restricted_sequences = ['AAAA', 'TTTT', 'CCC', 'GGG'] # smallest prohibited repeats of each category
-    pyrimadines = 'TC'
-    purines = 'AG'
-
-    # Generate alternating sequences
-    for pur1 in purines:
-        for pyr1 in pyrimadines:
-            for pur2 in purines:
-                for pyr2 in pyrimadines:
-                    for pur3 in purines:
-                        for pyr3 in pyrimadines:
-                            restricted_sequences.append(pur1 + pyr1 + pur2 + pyr2 + pur3 + pyr3)
-                            restricted_sequences.append(pyr1 + pur1 + pyr2 + pur2 + pyr3 + pur3)
 
 # generates all five pentameric units
 def genfives():
@@ -53,6 +39,8 @@ def genfives():
                         # NO PALINDROMES, POLYPURINES    
                         if (not restricted) and (not new_five == new_five[::-1]) :
                             fives[new_five] = False
+                        else:
+                            fives[new_five] = True
     print("Length of fives: " + str(len(fives)) )
 
 # generates all seven nucleotide units in order
@@ -68,106 +56,72 @@ def gensevens():
                             for i7 in lets:
                                 new_seven = i1 + i2 + i3 + i4 + i5 + i6 + i7
                                 restricted = False
-                                for sequence in restricted_sequences:
+                                for sequence in util.full_restricted_seq:
                                     if sequence in new_seven:
                                         restricted = True
-                                        #print(new_seven + " is restricted.")
                                         break
                                 
                                 # NO PALINDROMES, ALTERNATING PURINE-PYRIMIDINE (vice versa)
                                 if (not restricted) and (not new_seven== new_seven[::-1]):
                                     sevens[new_seven] = False
+                                else:
+                                    sevens[new_seven] = True
     print("Length of sevens: " + str(len(sevens)) + "\n")
 
 
 #####################
 
+def calc_five_restriction_score(sequence):
+    total = 0;
+    if(len(sequence) > 4):
+        total += util.get_restriction_score(sequence, util.five_restricted_seq)
+    return total
+
+def calc_seven_restriction_score(sequence):
+    total = 0;
+    if(len(sequence) > 6):
+        return util.get_restriction_score(sequence, util.full_restricted_seq)
+    return total  
+
+
 '''
-A better way to get next base:
 Take the blueprint and keeps track of all the violations up to an index value iterating through the blueprint,
 then checks if it increases when you add a base. If it does, use another base instead.
 
 oooooooggooo
 blueprint violation array: all 0s (no violations)
-during string generation, if we put in:
-    oooooogggooo
+during string generation, if we put in:  oooooogggooo
 then the number of violations will be greater than in the blueprint violation array
-
 now the blueprint array has:
     ooogggooo
 now the blueprint violation array will look like: [0, 0, 0, 0, 0, 1, 1, 1, 1, 1]
 
-another example:
-ooogggaaaaooo
-now the blueprint violation array will be: [0,0,0,0,0,1,1,1,1,2,2,2,2,2,2]
-
 '''
 
-def get_next_base(prev_4, prev_6, blueprint, index):
-    five_restricted = ['AAAA', 'TTTT', 'CCC', 'GGG','CCCC','GGGG','CCCCC','GGGGG','TTTTT','AAAAA']    
-    global restricted_sequences
-    next_possible_bases = []
+def get_blueprint_violation_array(blueprint):
+    violation_array = []
+    curr_blueprint_seq = ""
 
-    if(blueprint[index] != 'o'):
-        next_possible_bases.append(blueprint[index])
-        return next_possible_bases
+    recent_score = 0
 
-    #blueprint contains specific bases in current pentameric unit
+    for base in blueprint:
+        #print(curr_blueprint_seq)
+        curr_blueprint_seq += base
+        pent = ""
+        sept = ""
+        if(len(curr_blueprint_seq) > 4):
+            pent = curr_blueprint_seq[len(curr_blueprint_seq) - 5:]
+        if(len(curr_blueprint_seq) > 6):
+            sept = curr_blueprint_seq[len(curr_blueprint_seq) - 7:]
 
-    if(blueprint[(index - 4):index] != "oooo" ):
-        init_score = 0
-        if(len(prev_4) == 4):
-            init_score += util.get_restriction_score(prev_4, five_restricted)
-        if(len(prev_6) == 6):
-            init_score += util.get_restriction_score(prev_6, restricted_sequences)
+        score = util.get_restriction_score(sept, util.full_restricted_seq)
+        score += util.get_restriction_score(pent, util.five_restricted_seq)
 
-    for base in 'ACGT':
-       
-        pentameric_unit = prev_4 + base  # test pentameric unit
-        septameric_unit = prev_6 + base  # test septameric unit
+        violation_array.append(score)
 
-        p_ = fives.get(pentameric_unit, True)  # pentameric unit exists
-        s_ = sevens.get(septameric_unit, True) # septameric unit exists
-        
-        comp_bad = False
-        if complement_desired:
-            five_comp = util.reverse_complement(pentameric_unit)
-            comp_bad = comp_bad or fives.get(five_comp, True)
-            seven_comp = util.reverse_complement(septameric_unit)
-            comp_bad = comp_bad or sevens.get(seven_comp, True)
-        if comp_bad: # Bad base for complement
-            continue
-        # if we have two strands and they are not complementary, how similar can they be
-
-        if(blueprint[(index - 4):index] != "oooo" ):
-            new_score = 0
-
-            if(len(prev_4) == 4):
-                new_score += util.get_restriction_score(pentameric_unit, five_restricted)
-            if(len(prev_6) == 6):
-                new_score += util.get_restriction_score(septameric_unit, restricted_sequences)
-
-            if (new_score == init_score) and (not p_) and ((not s_) or (len(septameric_unit) != 7 )) : #if pentameric unit is not added yet && seven unit does not exist
-                next_possible_bases.append(base)
-
-    #blueprint does not contain specific bases in current pentameric unit
-
-        else:
-            if (not p_) and ((not s_) or (len(septameric_unit) != 7 )) : #if pentameric unit is not added yet && seven unit does not exist
-                next_possible_bases.append(base)
-    return next_possible_bases
+    return violation_array
 
 
-def get_first_five_bases(blueprint):
-    possibilities = util.get_pentameric_possiblilities(blueprint[0:5])
-
-    if(len(possibilities)==0):
-        print("no possibilities for first five bases")
-        return "none"
-
-    #random.shuffle(possibilities)
-    #return possibilities[0]
-    return random.choice(possibilities)
 
 
 def process_blueprint(strand_length, blueprint):
@@ -175,6 +129,77 @@ def process_blueprint(strand_length, blueprint):
         return blueprint.ljust(strand_length, 'o')
     else:
         return blueprint
+
+
+
+#####################
+
+def get_first_five_bases(blueprint):
+    possibilities = util.get_pentameric_possiblilities(blueprint[0:5])
+
+    if(len(possibilities)==0):
+        print("no possibilities for first five bases")
+        return "none"
+    return random.choice(possibilities)
+
+
+def get_next_base( prev_4, prev_6, blueprint, blueprint_violation_array,curr_length,complement_desired):
+    global restricted_sequences
+    global fives
+    global sevens 
+
+    blueprint_score = blueprint_violation_array[curr_length]
+    blueprint_base = blueprint[curr_length]   
+    next_possible_bases = []
+
+
+    #print("next expected score : "+str(blueprint_score))
+    #print('blueprint base: '+ str(blueprint_base)+ "  index: "+str(curr_length))
+
+    #CASE: next base is blueprint base,
+    if(blueprint_base != 'o'):
+        #print("new 5 score : "+ str(calc_five_restriction_score(prev_4+blueprint_base))+"  new 7 score :" + str(calc_seven_restriction_score(prev_6+blueprint_base)))
+        
+        #CHECK: restriction score is the same as base violations array
+        new_score = calc_five_restriction_score(prev_4+blueprint_base) + calc_seven_restriction_score(prev_6+blueprint_base)        
+        if(new_score != blueprint_score):
+            return []
+        next_possible_bases.append(blueprint_base)
+        return next_possible_bases
+
+    #CASE: next base is NOT blueprint base but unit contain blueprint bases
+    for base in 'ACGT':
+       
+        pentameric_unit = prev_4 + base         # test pentameric unit
+        septameric_unit = prev_6 + base         # test septameric unit
+        p_ = fives.get(pentameric_unit, False)   # pentameric unit exists
+        s_ = sevens.get(septameric_unit, False)  # septameric unit exists
+
+
+        # CHECK: new unit's reverse complement exists
+        comp_bad = False
+        if complement_desired:
+            five_comp = util.reverse_complement(pentameric_unit)
+            comp_bad = comp_bad or fives.get(five_comp, False)
+
+            seven_comp = util.reverse_complement(septameric_unit)
+            comp_bad = comp_bad or sevens.get(seven_comp, False)
+        if comp_bad and blueprint_score==0: 
+            print(" comp bad ")
+            continue
+
+        #CHECK: new base creates unwanted restricted sequence
+        new_score = calc_five_restriction_score(pentameric_unit) + calc_seven_restriction_score(septameric_unit)
+        
+        # print("new five score : "+ str(calc_five_restriction_score(pentameric_unit)) + "  new seven score :" + str(calc_seven_restriction_score(septameric_unit)))
+
+        if (new_score == blueprint_score) and ( ((not p_) and (not s_)) or blueprint_score != 0 ) : 
+            next_possible_bases.append(base)
+
+    return next_possible_bases
+
+
+
 
 
 #####################
@@ -191,8 +216,13 @@ def gen_string(strand_length, blueprint, complement_desired):
     #used for revert fives and sevens dictionary after failed attempts
     saved_fives = fives.copy()
     saved_sevens = sevens.copy()
+
     blueprint = process_blueprint(strand_length, blueprint)
+    blueprint_violation_array = get_blueprint_violation_array(blueprint)
+
     new_strand = []
+
+    backtrack_array = []
 
     #check if algorithm can start with building first five bases
     starting_bases = get_first_five_bases(blueprint)
@@ -200,15 +230,16 @@ def gen_string(strand_length, blueprint, complement_desired):
         print('No starting bases given constraints of blueprint.')
         return
 
-    #ensure enough unadded units are available 
+    #ensure enough unadded units are available?
+    
     attempt = 1
-    #if list(fives.values()).count(False) > strand_length
-    while(attempt < 2500):
+    while(attempt < 20):
         
         new_strand = starting_bases
         curr_length = 5
         while (curr_length < strand_length):
-            
+            #print("\n  * "+ str(new_strand) + " *  ")
+
             #get previous four bases for( _ _ _ _ + new base )
             prev_4 = new_strand[len(new_strand) - 4:]   
 
@@ -218,12 +249,18 @@ def gen_string(strand_length, blueprint, complement_desired):
                 prev_6 = new_strand[len(new_strand) - 6:] 
 
             #get next possible base
-            next_possible_bases = get_next_base(prev_4, prev_6, blueprint, curr_length)
+            next_possible_bases = get_next_base(prev_4, prev_6, blueprint, blueprint_violation_array, curr_length,complement_desired)
+            #print("next bases: "+ str(next_possible_bases))
 
             #CASE: add possible base (CONTINUE)
             if len(next_possible_bases) > 0:
                 chosen_unit = random.choice(next_possible_bases)
                 new_strand += chosen_unit  
+
+                #BACKTRACK CASE: add rest of base possiblilities to backtrack array
+                next_possible_bases.remove(chosen_unit)
+                backtrack_array.append(next_possible_bases)
+
                 update_fives(prev_4 + chosen_unit, complement_desired)
                 update_sevens(prev_6 + chosen_unit, complement_desired)
 
@@ -235,12 +272,11 @@ def gen_string(strand_length, blueprint, complement_desired):
         
         if len(new_strand) == strand_length:
             print("order completed at attempt #: " + str(attempt))     
-            update_all_fives_sevens(new_strand, complement_desired)
             all_strings.append(new_strand)
             return new_strand
         else:
             #print("attempt failed: "+ str(attempt))     
-
+            
             #undo changes to dictionary during failed attempt
             fives = saved_fives.copy()
             sevens = saved_sevens.copy()
@@ -252,21 +288,6 @@ def gen_string(strand_length, blueprint, complement_desired):
 
 
 #####################
-
-
-def update_all_fives_sevens(sequence,complement_desired):
-    global fives 
-    global sevens
-    if(complement_desired):
-        for i in range(len(sequence)-4):
-            five = sequence[i:i+5]
-            if(five in fives):
-                fives[five] = True
-
-        for d in range(len(sequence)-6):
-            sev = sequence[d:d+7]
-            if(sev in sevens):
-                sevens[sev] = True
 
 
 # updates the fives data structure with the new string
@@ -310,21 +331,22 @@ def add_sevens_approx(new_unit):
 fives = {}
 sevens = {}
 all_strings = []
-restricted_sequences = []
 size_of_strand = 50
 
-gen_restricted_sequences()
 genfives()
 gensevens()
 
-test_str = "CCoATooooAAAoooooooATTooGGGGGo"
+test_str = "GGoATooooAAAoooooooATTooGGGGGo"
 test_str_2 = "oCCCooooooooooooooATTooGGGGGGo"
+#print(get_blueprint_violation_array(test_str))
+
 test = gen_string(30,test_str, True)
-test2 = gen_string(30, test_str_2, True)
+#test2 = gen_string(30, test_str_2, True)
 print(test_str)
 print(test)
-print(test_str_2)
-print(test2)
+#print(test_str_2)
+#print(test2)
+
 
 """
 for i in range(0, 10):
