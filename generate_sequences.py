@@ -179,10 +179,9 @@ def get_next_base( prev_4, prev_6, blueprint, blueprint_violation_array,curr_len
         comp_bad = False
         if complement_desired:
             five_comp = util.reverse_complement(pentameric_unit)
-            comp_bad = comp_bad or fives.get(five_comp, False)
 
             seven_comp = util.reverse_complement(septameric_unit)
-            comp_bad = comp_bad or sevens.get(seven_comp, False)
+            comp_bad = fives.get(five_comp, False) or sevens.get(seven_comp, False)
         if comp_bad:
             print(" comp bad ")     
 
