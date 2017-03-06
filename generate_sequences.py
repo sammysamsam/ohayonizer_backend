@@ -102,13 +102,12 @@ def get_blueprint_violation_array(blueprint):
     violation_array = []
     curr_blueprint_seq = ""
 
-    recent_score = 0
-
     for base in blueprint:
         #print(curr_blueprint_seq)
         curr_blueprint_seq += base
         pent = ""
         sept = ""
+
         if(len(curr_blueprint_seq) > 4):
             pent = curr_blueprint_seq[len(curr_blueprint_seq) - 5:]
         if(len(curr_blueprint_seq) > 6):
@@ -120,7 +119,6 @@ def get_blueprint_violation_array(blueprint):
         violation_array.append(score)
 
     return violation_array
-
 
 
 
@@ -152,13 +150,13 @@ def get_next_base( prev_4, prev_6, blueprint, blueprint_violation_array,curr_len
     blueprint_base = blueprint[curr_length]   
     next_possible_bases = []
 
+    print("next expected score : "+str(blueprint_score))
+    print('blueprint base: '+ str(blueprint_base)+ "  index: "+str(curr_length))
 
-    #print("next expected score : "+str(blueprint_score))
-    #print('blueprint base: '+ str(blueprint_base)+ "  index: "+str(curr_length))
 
     #CASE: next base is blueprint base,
     if(blueprint_base != 'o'):
-        #print("new 5 score : "+ str(calc_five_restriction_score(prev_4+blueprint_base))+"  new 7 score :" + str(calc_seven_restriction_score(prev_6+blueprint_base)))
+        print("new 5 score : "+ str(calc_five_restriction_score(prev_4+blueprint_base))+"  new 7 score :" + str(calc_seven_restriction_score(prev_6+blueprint_base)))
         
         #CHECK: restriction score is the same as base violations array
         new_score = calc_five_restriction_score(prev_4+blueprint_base) + calc_seven_restriction_score(prev_6+blueprint_base)        
@@ -166,6 +164,7 @@ def get_next_base( prev_4, prev_6, blueprint, blueprint_violation_array,curr_len
             return []
         next_possible_bases.append(blueprint_base)
         return next_possible_bases
+
 
     #CASE: next base is NOT blueprint base but unit contain blueprint bases
     for base in 'ACGT':
@@ -184,16 +183,20 @@ def get_next_base( prev_4, prev_6, blueprint, blueprint_violation_array,curr_len
 
             seven_comp = util.reverse_complement(septameric_unit)
             comp_bad = comp_bad or sevens.get(seven_comp, False)
-        if comp_bad and blueprint_score==0: 
-            print(" comp bad ")
-            continue
+        if comp_bad:
+            print(" comp bad ")     
+
+            if blueprint_score==0: 
+                continue
 
         #CHECK: new base creates unwanted restricted sequence
         new_score = calc_five_restriction_score(pentameric_unit) + calc_seven_restriction_score(septameric_unit)
         
-        # print("new five score : "+ str(calc_five_restriction_score(pentameric_unit)) + "  new seven score :" + str(calc_seven_restriction_score(septameric_unit)))
+        print("new five score : " + str(calc_five_restriction_score(pentameric_unit)) + "  new seven score :" + str(calc_seven_restriction_score(septameric_unit)))
+        print("pent: " + str(p_) + "  "+pentameric_unit)
+        print("sept: "+ str(s_)+ " "+septameric_unit+"\n\n")
 
-        if (new_score == blueprint_score) and ( ((not p_) and (not s_)) or blueprint_score != 0 ) : 
+        if (new_score == blueprint_score) and ( ((not p_) and (not s_)) or blueprint_score != 0 ): 
             next_possible_bases.append(base)
 
     return next_possible_bases
@@ -219,9 +222,10 @@ def gen_string(strand_length, blueprint, complement_desired):
 
     blueprint = process_blueprint(strand_length, blueprint)
     blueprint_violation_array = get_blueprint_violation_array(blueprint)
+    
+    print(str(blueprint_violation_array)+"\n\n")
 
     new_strand = []
-
     backtrack_array = []
 
     #check if algorithm can start with building first five bases
@@ -237,29 +241,27 @@ def gen_string(strand_length, blueprint, complement_desired):
         
         new_strand = starting_bases
         curr_length = 5
+
         while (curr_length < strand_length):
-            #print("\n  * "+ str(new_strand) + " *  ")
-
-            #get previous four bases for( _ _ _ _ + new base )
-            prev_4 = new_strand[len(new_strand) - 4:]   
-
-            #get previous six bases for( _ _ _ _ _ + new base )       
-            prev_6 = ''
-            if curr_length >= 7:
+            prev_4 = new_strand[len(new_strand) - 4:] #get previous four bases for( _ _ _ _ + new base )
+            prev_6 = ''                  #get previous six bases for( _ _ _ _ _ + new base )  
+            if curr_length >= 6:
                 prev_6 = new_strand[len(new_strand) - 6:] 
+
 
             #get next possible base
             next_possible_bases = get_next_base(prev_4, prev_6, blueprint, blueprint_violation_array, curr_length,complement_desired)
-            #print("next bases: "+ str(next_possible_bases))
 
             #CASE: add possible base (CONTINUE)
             if len(next_possible_bases) > 0:
                 chosen_unit = random.choice(next_possible_bases)
                 new_strand += chosen_unit  
+                print("\n  * "+ str(new_strand) + " *  \n")
 
                 #BACKTRACK CASE: add rest of base possiblilities to backtrack array
                 next_possible_bases.remove(chosen_unit)
                 backtrack_array.append(next_possible_bases)
+
 
                 update_fives(prev_4 + chosen_unit, complement_desired)
                 update_sevens(prev_6 + chosen_unit, complement_desired)
@@ -267,19 +269,26 @@ def gen_string(strand_length, blueprint, complement_desired):
             #CASE: no possible base (STOP)
             else:
                 curr_length = strand_length 
+                print("\n\n\nAttempt failed: " + str(new_strand)+"\n\n")    
                 new_strand = []
             curr_length += 1
         
         if len(new_strand) == strand_length:
-            print("order completed at attempt #: " + str(attempt))     
+            print("\norder completed at attempt #: " + str(attempt))     
             all_strings.append(new_strand)
             return new_strand
         else:
-            #print("attempt failed: "+ str(attempt))     
-            
             #undo changes to dictionary during failed attempt
             fives = saved_fives.copy()
             sevens = saved_sevens.copy()
+
+            #backtrack
+
+            #find most recent multi base choice
+            #revert added 5/7 units
+            #revert new_strand
+            #revert curr_length
+
             attempt += 1
 
     return "Could not generate a string in ", attempt, " attempts."
@@ -336,16 +345,18 @@ size_of_strand = 50
 genfives()
 gensevens()
 
-test_str = "GGoATooooAAAoooooooATTooGGGGGo"
+test_str = "GGoATooooAAAAooooAoAToGGoGGGoGooooATGCoo"
 test_str_2 = "oCCCooooooooooooooATTooGGGGGGo"
 #print(get_blueprint_violation_array(test_str))
 
-test = gen_string(30,test_str, True)
-#test2 = gen_string(30, test_str_2, True)
+test = gen_string(40,test_str, True)
+test2 = gen_string(30, test_str_2, True)
+#test3 = gen_string(100, "",True)
 print(test_str)
 print(test)
-#print(test_str_2)
-#print(test2)
+print(test_str_2)
+print(test2)
+#print(test3)
 
 
 """
