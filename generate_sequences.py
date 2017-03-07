@@ -167,8 +167,7 @@ def get_next_base( prev_4, prev_6, blueprint, blueprint_violation_array,curr_len
 
 
     #CASE: next base is NOT blueprint base but unit contain blueprint bases
-    for base in 'ACGT':
-       
+    for base in 'ACGT':    
         pentameric_unit = prev_4 + base         # test pentameric unit
         septameric_unit = prev_6 + base         # test septameric unit
         p_ = fives.get(pentameric_unit, False)   # pentameric unit exists
@@ -217,15 +216,10 @@ def gen_string(strand_length, blueprint, complement_desired):
 
     blueprint = process_blueprint(strand_length, blueprint)
     blueprint_violation_array = get_blueprint_violation_array(blueprint)
-    print(str(blueprint_violation_array)+"\n\n")
+    print("\n order processed\n blueprint violation array: "+str(blueprint_violation_array)+"\n\n")
 
     new_strand = []
 
-    #check if algorithm can start with building first five bases
-    starting_bases = get_first_five_bases(blueprint)
-    if len(starting_bases) == 0:
-        print('No starting bases given constraints of blueprint.')
-        return
 
     #ensure enough unadded units are available?
     
@@ -235,6 +229,12 @@ def gen_string(strand_length, blueprint, complement_desired):
         #BACKTRACK VARIABLES
         backtrack_array = []
         backtrack_seq = []      
+
+        #check if algorithm can start with building first five bases
+        starting_bases = get_first_five_bases(blueprint)
+        if len(starting_bases) == 0:
+            print('No starting bases given constraints of blueprint.')
+            return
 
         new_strand = starting_bases
         curr_length = 5
@@ -264,7 +264,8 @@ def gen_string(strand_length, blueprint, complement_desired):
                 new_strand += chosen_unit 
                 update_fives(prev_4 + chosen_unit, complement_desired)
                 update_sevens(prev_6 + chosen_unit, complement_desired)
-                print("\n * "+ str(new_strand) + " * ")
+                
+                print("# "+ str(new_strand))
 
             #CASE: no possible base (STOP)
             else:
@@ -273,13 +274,16 @@ def gen_string(strand_length, blueprint, complement_desired):
                 backtrack_index = len(backtrack_array)-1
                 if(backtrack_index > -1):
                     print("\nBACKTRACK")
-                    backtrack_bases = backtrack_array[backtrack_index]
+                    print("go back " + str(len(new_strand) - len(backtrack_seq[backtrack_index])) + " sequences")
 
+                    backtrack_bases = backtrack_array[backtrack_index]
+                    
+                    print("REVERT FIVES: from " + str( sum(fives.values())))
                     #revert added 5/7 units
-                    revert_fives(new_strand, backtrack_seq[backtrack_index] )
-                    revert_sevens(new_strand, backtrack_seq[backtrack_index] )
+                    revert_fives(new_strand, backtrack_seq[backtrack_index] ,complement_desired)
+                    revert_sevens(new_strand, backtrack_seq[backtrack_index] ,complement_desired)
                    
-                    print("go back " + str(len(new_strand) - len(backtrack_seq[backtrack_index]) - 1) + " sequences")
+
                     #revert sequence
                     new_strand = backtrack_seq[backtrack_index]
 
@@ -289,14 +293,28 @@ def gen_string(strand_length, blueprint, complement_desired):
                         backtrack_bases.remove(backtrack_unit)
                         backtrack_array[backtrack_index] = backtrack_bases
                     else:
-                        backtrack_bases.remove(backtrack_index)
-                        backtrack_seq.remove(backtrack_index)
+                        backtrack_seq.pop()
+                        backtrack_array.pop()
 
+                    #add base and update the new unit
+                    new_strand += backtrack_unit
+                    update_fives(new_strand[len(new_strand) - 5:], complement_desired)
+                    if(len(new_strand) > 6):
+                        update_sevens(new_strand[len(new_strand) - 7:], complement_desired)
+    
+                    print('to '+str(sum(fives.values())))
+
+                    print("\n# "+ str(new_strand))
+                    
                     #update current length
                     curr_length = len(new_strand)
                     continue
                 else:
+                    #revert added 5/7 units
+                    revert_fives(new_strand, "",complement_desired)
+                    revert_sevens(new_strand, "",complement_desired)          
                     new_strand = []
+                    break
 
             curr_length += 1
         
@@ -312,23 +330,35 @@ def gen_string(strand_length, blueprint, complement_desired):
 
 #####################
 
-def revert_fives(curr_seq, rev_seq):
+def revert_fives(curr_seq, rev_seq,complement_desired):
     global fives
-    for curr_index in range(len(rev_seq)-1, len(curr_seq)-1 ):
+    
+    for curr_index in range(len(rev_seq), len(curr_seq) ):
+        print("remove base: "+ curr_seq[curr_index])
         pent = curr_seq[curr_index - 5:curr_index] 
         score = calc_five_restriction_score(pent)
+        
         if(score == 0):
-            fives[pent] = False
-
+            if complement_desired:
+                fives[pent] = False
+            new_reverse_unit = util.reverse_complement(pent)
+            fives[new_reverse_unit] = False         
    
-def revert_sevens(curr_seq, rev_seq):
+def revert_sevens(curr_seq, rev_seq,complement_desired):
     global sevens              
-    for curr_index in range(len(rev_seq)-1, len(curr_seq)-1 ):
+    for curr_index in range(len(rev_seq), len(curr_seq)):
         if(curr_index > 6):
+            
             sept = curr_seq[curr_index - 7:curr_index]
             score = calc_seven_restriction_score(sept)
+            
             if(score == 0):
                 sevens[sept] == False
+                if complement_desired:
+                    sevens[sept] = False
+                new_reverse_unit = util.reverse_complement(sept)
+                sevens[new_reverse_unit] = False    
+
 
 # updates the fives data structure with the new string
 def update_fives(new_unit, complement_desired):
@@ -380,12 +410,16 @@ test_str = "GGoATooooAAAAooooAoAToGGoGGGoGooooATGCoo"
 test_str_2 = "oCCCooooooooooooooATTooGGGGGGooooooooooo"
 #print(get_blueprint_violation_array(test_str))
 
+for i in range(0,1):
+
+    test3 = gen_string(100, "", True)
+    print(test3)
+
 test = gen_string(40,test_str, True)
 test2 = gen_string(40, test_str_2, True)
-test3 = gen_string(50, "", True)
 #test3 = gen_string(100, "",True)
 print(test_str)
-print(test)
+print(test+"\n")
 print(test_str_2)
 print(test2)
 #print(test3)
