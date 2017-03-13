@@ -2,29 +2,44 @@ import random
 class strand_utilities:
 
 
-    five_restricted_seq = ['AAAA', 'TTTT', 'CCC', 'GGG']
-    full_restricted_seq = []
+    five_restricted_seq = ['AAAA', 'TTTT', 'CCC', 'GGG']# smallest prohibited repeats of each category
+    
+    full_restricted_seq = ['AAAA', 'TTTT', 'CCC', 'GGG']# smallest prohibited repeats of each category
 
     def __init__(self):
-        self.gen_full_restricted_sequences()
+        self.gen_restricted_sequences()
 
 
-    def gen_full_restricted_sequences(self):
-        restricted_sequences = ['AAAA', 'TTTT', 'CCC', 'GGG'] # smallest prohibited repeats of each category
+    def gen_restricted_sequences(self):
         pyrimadines = 'TC'
         purines = 'AG'
 
-        # Generate alternating sequences
+        lets = 'ACGT'
+        for i1 in lets:
+            for i2 in lets:
+                for i3 in lets:
+                    for i4 in lets:
+                        for i5 in lets:
+                            #five pentameric units
+                            pent = i1 + i2 + i3 + i4 +i5
+                            if(pent == pent[::-1]):
+                                self.five_restricted_seq.append(pent)
+                            #seven pentameric units
+                            for i6 in lets:
+                                for i7 in lets:
+                                    sept = pent + i6 + i7
+                                    if(sept == sept[::-1]):
+                                        self.full_restricted_seq.append(sept)
+
+        #alternating purine - pyrimidines
         for pur1 in purines:
             for pyr1 in pyrimadines:
                 for pur2 in purines:
                     for pyr2 in pyrimadines:
                         for pur3 in purines:
                             for pyr3 in pyrimadines:
-                                restricted_sequences.append(pur1 + pyr1 + pur2 + pyr2 + pur3 + pyr3)
-                                restricted_sequences.append(pyr1 + pur1 + pyr2 + pur2 + pyr3 + pur3)
-        #print(restricted_sequences)
-        self.full_restricted_seq = restricted_sequences
+                                self.full_restricted_seq.append(pur1 + pyr1 + pur2 + pyr2 + pur3 + pyr3)
+                                self.full_restricted_seq.append(pyr1 + pur1 + pyr2 + pur2 + pyr3 + pur3)
 
 
 ############################################
@@ -142,7 +157,7 @@ class strand_utilities:
 #x = util.get_pentameric_possiblilities("GGGGG")
 #print(x)
 util = strand_utilities()
-print(util.get_new_restriction_score("GACAGG",'G',True))
+print(util.get_new_restriction_score("TCTCTCTCTCTCTCTCTCTC",'T',True))
 
 
 

@@ -59,7 +59,7 @@ def gensevens():
                                         break
                                 
                                 # NO PALINDROMES, ALTERNATING PURINE-PYRIMIDINE (vice versa)
-                                if (not restricted) and (not new_seven== new_seven[::-1]):
+                                if (not restricted) and (not new_seven == new_seven[::-1]):
                                     sevens[new_seven] = False
     #print("Length of sevens: " + str(len(sevens)) + "\n")
 
@@ -131,7 +131,6 @@ def get_next_base(prev_4, prev_6, blueprint, blueprint_violation_array, curr_seq
     #CASE: specific base desired from blueprint
     if(blueprint_base != 'o'):
         new_score = util.get_new_restriction_score(curr_seq, blueprint_base, complement_desired)       
-        
         if(new_score != blueprint_score):  
             return []
         return [blueprint_base]
@@ -142,6 +141,9 @@ def get_next_base(prev_4, prev_6, blueprint, blueprint_violation_array, curr_seq
         pentameric_unit = prev_4 + base         # test pentameric unit
         septameric_unit = prev_6 + base         # test septameric unit
         
+        #CHECK: new base creates unwanted restricted sequence
+        new_score = util.get_new_restriction_score(curr_seq, base, complement_desired)        
+
         p_ = fives.get(pentameric_unit, False)   # pentameric unit exists
         s_ = sevens.get(septameric_unit, False)  # septameric unit exists
 
@@ -152,9 +154,6 @@ def get_next_base(prev_4, prev_6, blueprint, blueprint_violation_array, curr_seq
             if fives.get(five_comp, False) or sevens.get(seven_comp, False):
                 #print(" comp bad ")    
                 continue
-
-        #CHECK: new base creates unwanted restricted sequence
-        new_score = util.get_new_restriction_score(curr_seq, base, complement_desired)
         
         #print("new score : " + str(new_score) + "|  " + pentameric_unit +":"+ str(p_) + "  || "+ septameric_unit + ":" + str(s_))
 
@@ -199,10 +198,10 @@ def gen_string(strand_length, blueprint, complement_desired):
 
         #check if algorithm can start with building first five bases       
         if curr_length == 0:
-            #print('No starting bases given constraints of blueprint.')
-            return
+            return 'No starting bases given constraints of blueprint.'
 
         while (curr_length < strand_length):
+            print("# "+ str(new_strand))
 
             #get previous four/six bases for( _ _ _ _ + new base )
             prev_4 = new_strand[len(new_strand) - 4:] 
@@ -227,7 +226,7 @@ def gen_string(strand_length, blueprint, complement_desired):
                 update_fives(prev_4 + chosen_unit, complement_desired)
                 update_sevens(prev_6 + chosen_unit, complement_desired)
                 
-                #print("# "+ str(new_strand))
+
 
             #CASE: not possible base (BACKTRACK)
             else:
@@ -271,6 +270,7 @@ def gen_string(strand_length, blueprint, complement_desired):
                     continue
                 else:
                     #backtrack added 5/7 units
+                    print("***ATTEMPT #"+str(attempt)+"***\n")
                     revert_units(new_strand, "", blueprint, complement_desired)         
                     new_strand = []
                     break
@@ -280,11 +280,11 @@ def gen_string(strand_length, blueprint, complement_desired):
         if len(new_strand) == strand_length:
             #print("\norder completed at attempt #: " + str(attempt))     
             all_strings.append(new_strand)
-            return new_strand
+            return str(new_strand)
         else:
             attempt += 1
 
-    return "Could not generate a string in ", attempt, " attempts."
+    return "Could not generate a string in "+ str(attempt) + " attempts."
   
 
 #####################
@@ -295,39 +295,47 @@ def revert_units(curr_seq, rev_seq, blueprint, complement_desired):
 
     curr_len = len(curr_seq)
     rev_len = len(rev_seq)
-    #print("backtrack seq : "+rev_seq)
-    #print("curr seq:       "+curr_seq)
+    print("backtrack to sequence:\n# "+rev_seq+"\n")
     for curr_index in range( rev_len, curr_len):
-        #print("\nremove base: "+ curr_seq[curr_index])
+        #print("remove base: "+ curr_seq[curr_index])
+
+        pent = curr_seq[curr_index - 4:curr_index+1]
+        if complement_desired and fives.get(pent, False) :
+            fives[pent] = False
         
-        #base is blueprint base
-        if(blueprint[curr_index] != 'o'):
-            continue 
+        p_reverse_unit = util.reverse_complement(pent)   
+        if fives.get(p_reverse_unit, False):
+            fives[p_reverse_unit] = False
+        #print("pent: "+pent + "  => "+ str(fives.get(pent, "DNE")))
 
-        if(curr_index > 4):
-            pent = curr_seq[curr_index - 5:curr_index]
-            if complement_desired and fives.get(pent, False) :
-                fives[pent] = False
-            
-            p_reverse_unit = util.reverse_complement(pent)   
-            if fives.get(p_reverse_unit, False):
-                fives[p_reverse_unit] = False
-            #print("pent: "+pent)
-        if(curr_index > 6):
-            sept = curr_seq[curr_index - 7:curr_index]   
-            if complement_desired and sevens.get(sept, False) :      
+        sept = curr_seq[curr_index - 6:curr_index+1]   
+        if complement_desired and sevens.get(sept, False) :      
+            revert_sevens_approx(sept)
+
+        s_reverse_unit = util.reverse_complement(sept)
+        if sevens.get(s_reverse_unit, False):
+            revert_sevens_approx(s_reverse_unit)
+        #print("sept: "+sept + "  => "+ str(sevens.get(sept, "DNE")))
+
+
+def revert_sevens_approx(unit):
+    global sevens
+    lets = "ACGT"
+    i = 1
+    while i < 6:
+        for let in lets:
+            sept = unit[:i] + let + unit[i + 1:]
+            if sevens.get(sept, False):
                 sevens[sept] = False
+        i += 1
 
-            s_reverse_unit = util.reverse_complement(sept)
-            if sevens.get(s_reverse_unit, False):
-                sevens[s_reverse_unit] = False 
-            #print("sept: "+sept)
+
 
 # updates the fives data structure with the new string
 def update_fives(new_unit, complement_desired):
     global fives
     if len(new_unit) == 5:
-        if complement_desired and (not fives.get(new_unit, True)): #not exist = False, added = True, not added = False
+        if complement_desired and (not fives.get(new_unit, True)): #not exist = True, added = True, not added = False
             fives[new_unit] = True
 
         new_reverse_unit = util.reverse_complement(new_unit)
@@ -353,7 +361,7 @@ def update_sevens_approx(new_unit):
     while i < 6:
         for let in lets:
             new = new_unit[:i] + let + new_unit[i + 1:]
-            if new in sevens and (not sevens.get(new, True) ):
+            if (not sevens.get(new, True)):
                 sevens[new] = True
         i += 1
 
@@ -371,35 +379,52 @@ size_of_strand = 50
 genfives()
 gensevens()
 
+"""
+#test1
 test_str = "GGoATooooAAAAooooAoAToGGoGGGoGooooATGCoo"
 test_str_2 = "oCCCooooooooooooooATTooGGGoooGGGooooooooooo"
-##print(get_blueprint_violation_array(test_str))
 
+print("blueprint violation array: " + str(get_blueprint_violation_array(test_str)))
 
-
-test3 = gen_string(100, "",True)
-test3 = gen_string(100, "",True)
-test3 = gen_string(100, "",True)
-#test = gen_string(40,test_str, True)
-test2 = gen_string(43, test_str_2, True)
-#test3 = gen_string(100,"",True)
-
-##print(test_str)
-
-##print(str(test2)+"\n")
-##print(test_str_2)
-
-
-
-#test4 = gen_string(100,"",True)
-
-
+print ("total fives: "+ str(len(fives)))
+test2 = gen_string(40, test_str, True)
 print(test2)
-print(test3)
-##print(test4)
+print("\n\nlength of fives used: "+ str(sum(fives.values())))
+
+print ("total fives: "+ str(len(fives)))
+test = gen_string(43, test_str_2, True)
+print(test)
+print("\n\nlength of fives used: "+ str(sum(fives.values())))
 
 
 """
+
+#test2
+
+test2 = gen_string(100, "", True)
+print("\nresult: " + test2)
+print("length of fives used: "+ str(sum(fives.values())))
+print("length of sevens used: "+ str(sum(sevens.values())))
+
+test3 = gen_string(100, "", True)
+print("\nresult: " + test3)
+print("length of fives used: "+ str(sum(fives.values())))
+print("length of sevens used: "+ str(sum(sevens.values())))
+
+test4 = gen_string(100, "", True)
+print("\nresult: " + test4)
+print("length of fives used: "+ str(sum(fives.values())))
+print("length of sevens used: "+ str(sum(sevens.values())))
+
+test5 = gen_string(100, "", True)
+print("\nresult: " + test5)
+print("length of fives used: "+ str(sum(fives.values())))
+print("length of sevens used: "+ str(sum(sevens.values())))
+
+
+
+"""
+#test3
 for i in range(0, 10):
     #print gen_string(size_of_strand,"",True)
     #print("pentameric units remaining:" + str(fives.values().count(False)))
