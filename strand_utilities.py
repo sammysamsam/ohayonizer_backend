@@ -2,9 +2,8 @@ import random
 class strand_utilities:
 
 
-    five_restricted_seq = ['AAAA', 'TTTT', 'CCC', 'GGG']# smallest prohibited repeats of each category
     
-    full_restricted_seq = ['AAAA', 'TTTT', 'CCC', 'GGG']# smallest prohibited repeats of each category
+    full_restricted_seq = ['AAAA', 'TTTT', 'CCC', 'GGG']# + palindromic septameric units + palindromic pentameric units + alternating pyurine + pyrimidine
 
     def __init__(self):
         self.gen_restricted_sequences()
@@ -23,7 +22,7 @@ class strand_utilities:
                             #five pentameric units
                             pent = i1 + i2 + i3 + i4 +i5
                             if(pent == pent[::-1]):
-                                self.five_restricted_seq.append(pent)
+                                self.full_restricted_seq.append(pent)
                             #seven pentameric units
                             for i6 in lets:
                                 for i7 in lets:

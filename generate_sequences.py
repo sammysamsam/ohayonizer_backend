@@ -201,7 +201,6 @@ def gen_string(strand_length, blueprint, complement_desired):
             return 'No starting bases given constraints of blueprint.'
 
         while (curr_length < strand_length):
-            print("# "+ str(new_strand))
 
             #get previous four/six bases for( _ _ _ _ + new base )
             prev_4 = new_strand[len(new_strand) - 4:] 
@@ -230,6 +229,8 @@ def gen_string(strand_length, blueprint, complement_desired):
 
             #CASE: not possible base (BACKTRACK)
             else:
+                print("# "+ str(new_strand))
+
                 backtrack_index = len(backtrack_array)-1
                 if(backtrack_index != -1):
                     #print("\n\nBACKTRACK \n go back " + str(len(new_strand) - len(backtrack_seq[backtrack_index])) + " sequences")
@@ -295,7 +296,7 @@ def revert_units(curr_seq, rev_seq, blueprint, complement_desired):
 
     curr_len = len(curr_seq)
     rev_len = len(rev_seq)
-    print("backtrack to sequence:\n# "+rev_seq+"\n")
+    #print("backtrack to sequence:\n# "+rev_seq+"\n")
     for curr_index in range( rev_len, curr_len):
         #print("remove base: "+ curr_seq[curr_index])
 
@@ -378,7 +379,8 @@ size_of_strand = 50
 
 genfives()
 gensevens()
-
+print ("total fives: "+ str(len(fives)))
+print ("total sevens: "+ str(len(sevens)) + "\n")
 """
 #test1
 test_str = "GGoATooooAAAAooooAoAToGGoGGGoGooooATGCoo"
@@ -416,12 +418,15 @@ print("\nresult: " + test4)
 print("length of fives used: "+ str(sum(fives.values())))
 print("length of sevens used: "+ str(sum(sevens.values())))
 
-test5 = gen_string(100, "", True)
+test5 = gen_string(70, "", True)
 print("\nresult: " + test5)
 print("length of fives used: "+ str(sum(fives.values())))
 print("length of sevens used: "+ str(sum(sevens.values())))
 
-
+print("\n___________\n1: " + test2)
+print("2: " + test3)
+print("3: " + test4)
+print("4: " + test5)
 
 """
 #test3
