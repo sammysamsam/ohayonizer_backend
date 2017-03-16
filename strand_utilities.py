@@ -8,28 +8,11 @@ class strand_utilities:
     def __init__(self):
         self.gen_restricted_sequences()
 
-
     def gen_restricted_sequences(self):
         pyrimadines = 'TC'
         purines = 'AG'
 
         lets = 'ACGT'
-        for i1 in lets:
-            for i2 in lets:
-                for i3 in lets:
-                    for i4 in lets:
-                        for i5 in lets:
-                            #five pentameric units
-                            pent = i1 + i2 + i3 + i4 +i5
-                            if(pent == pent[::-1]):
-                                self.full_restricted_seq.append(pent)
-                            #seven pentameric units
-                            for i6 in lets:
-                                for i7 in lets:
-                                    sept = pent + i6 + i7
-                                    if(sept == sept[::-1]):
-                                        self.full_restricted_seq.append(sept)
-
         #alternating purine - pyrimidines
         for pur1 in purines:
             for pyr1 in pyrimadines:
@@ -44,11 +27,11 @@ class strand_utilities:
 ############################################
 
     # take reverse complement of DNA
-    def reverse_complement(e, s):
-        srev = s[::-1]
-        return strand_utilities.complement(e, srev)
+    def reverse_complement(e_, s):
+        rev = s[::-1]
+        return e_.complement(rev)
 
-    def complement(e,s):
+    def complement(e_, s):
         out = ''
         for let in s:
             if (let == 'A'):
@@ -59,20 +42,31 @@ class strand_utilities:
                 out+= 'C'
             elif (let == 'T'):
                 out+= 'A'
+            else:
+                out+=let
         return out       
 
     #get one random base
-    def random_base():
+    def random_base(e_):
         baselist = ['A','T','C','G']
         return random.choice(baselist)
 
 
     #get random sequence with given length
-    def random_sequence(length):
+    def random_sequence(e_, length):
         seq = ""
         for i in range(1,length):
             seq += random_base();
         return seq
+
+    def palindrome_check(e_, seq):
+        #print("palindrome: " + seq + "  = "+ str((seq == e_.reverse_complement(seq))))
+        if "o" in seq:
+            return False
+        return (seq == e_.reverse_complement(seq))
+
+###################
+
 
     """
     Based on a given blueprint, it returns an array of possible sequences that dont violate or worsen 
@@ -82,26 +76,27 @@ class strand_utilities:
 
     """
 
-    def get_new_restriction_score(e, seq, new_base, complement_desired):
+    def get_new_restriction_score(e_, seq, new_base, complement_desired):
 
         score = 0
-        seq = seq+new_base
-        seq_len = len(seq)
+        new_seq = seq+new_base
+        seq_len = len(new_seq)
 
-        #if(complement_desired):
-        #    rev_seq = strand_utilities.complement(e,seq)
+        #restricted seq check
+        for res in e_.full_restricted_seq:
+            res_length = len(res)
+            if(seq_len >= res_length):           
+                if new_seq[seq_len-res_length:] == res:
+                    score += 1
 
-#        print(seq + " "+ rev_seq)
-        for res in e.full_restricted_seq:
-                res_length = len(res)
+        #palindrome check
+        if(seq_len > 4):
+            six = new_seq[seq_len-4:]
+            if e_.palindrome_check(six):
+                score += 1
+                if six in seq:
+                    score += 1
 
-                if(seq_len >= res_length):           
-                    if seq[seq_len-res_length:] == res:
-                        #print('Restricted sequence found')
-                        #print('Substring of current string ' + seq + ' is ' + res)
-                        score += 1
-        #            if complement_desired and rev_seq[seq_len-res_length:] == res:
-        #                score += 1
         return score
 
 
@@ -149,14 +144,13 @@ class strand_utilities:
 
 
 
+
 #TEST AREA 
 
-
-
-#x = util.get_pentameric_possiblilities("GGGGG")
-#print(x)
+"""
 util = strand_utilities()
-print(util.get_new_restriction_score("TCTCTCTCTCTCTCTCTCTC",'T',True))
 
-
-
+print(util.palindrome_check("TGGCCA"))
+print(util.palindrome_check("AAAT"))
+print(util.palindrome_check("AAA"))
+"""
