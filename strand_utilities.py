@@ -133,14 +133,8 @@ class strand_utilities:
                                 new_score += strand_utilities.get_new_restriction_score(self, i1+i2+i3+i4, i5,complement_desired)
                                
                                 if (new_score == init_score):
-                                    if (new_five == new_five[::-1]):
-                                        palim_results.append(new_five)
-                                    else:
-                                        results.append(new_five)
-        if(len(results) != 0):
+                                    results.append(new_five)
             return results
-        else:
-            return palim_results
 
 
 

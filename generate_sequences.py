@@ -239,7 +239,7 @@ def gen_string(strand_length, blueprint, complement_desired):
 
                 backtrack_index = len(backtrack_array)-1
                 if(backtrack_index != -1):
-                    print("backtrack length: "+str(len(backtrack_array)))
+                   # print("backtrack length: "+str(len(backtrack_array)))
                     
                     revert_units(new_strand, backtrack_seq[backtrack_index], added_units ,complement_desired)
                     backtrack_bases = backtrack_array[backtrack_index]
@@ -267,9 +267,10 @@ def gen_string(strand_length, blueprint, complement_desired):
                         backtrack_seq.pop()
                         backtrack_array.pop()
 
-                    print("\nBacktrack to: " + str(new_strand))
+                    #print("\nBacktrack to: " + str(new_strand))
                 else:
                     #backtrack added 5/7 units
+                    print("stoped at: "+new_strand)
                     print("***ATTEMPT #"+str(attempt)+"***\n")
                     revert_units(new_strand, "", added_units, complement_desired)         
                     new_strand = []
