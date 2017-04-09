@@ -122,7 +122,7 @@ def get_first_six_bases(blueprint, blueprint_violation_array, complement_desired
         return "none"
     return random.choice(possibilities)
 
-def get_last_six_bases(blueprint, sequence, complement_desired, blueprint_violation_array)
+def get_last_six_bases(sequence, blueprint, blueprint_violation_array, complement_desired, )
 
 
 
@@ -193,7 +193,7 @@ def gen_string(strand_length, blueprint, complement_desired, strand_list, front_
     #ensure enough unadded units are available?
     
     attempt = 1
-    while(attempt < 200):
+    while(attempt < 10):
 
         #BACKTRACK VARIABLES
         backtrack_array = []
@@ -201,7 +201,7 @@ def gen_string(strand_length, blueprint, complement_desired, strand_list, front_
 
         
 ###########
-        added_units = {0:[],1:[],2:[],3:[],4:[]}
+        added_units = {0:[],1:[],2:[],3:[],4:[], 5[]}
         new_strand = get_first_six_bases(blueprint, blueprint_violation_array , complement_desired)
 ###########
 
@@ -209,7 +209,7 @@ def gen_string(strand_length, blueprint, complement_desired, strand_list, front_
         if curr_length == 0:
             return 'No starting bases given constraints of blueprint.'
 
-        while (curr_length < strand_length):
+        while (curr_length < strand_length-6):
 
             #get previous four/six bases for( _ _ _ _ + new base )
             prev_4 = new_strand[len(new_strand) - 4:] 
@@ -280,6 +280,13 @@ def gen_string(strand_length, blueprint, complement_desired, strand_list, front_
 
             curr_length += 1
         
+
+######
+        if len(new_strand) == strand_length-6:
+            new_strand = get_last_six_bases(new_strand ,blueprint, blueprint_violation_array , complement_desired)
+######
+
+
         if len(new_strand) == strand_length:
             #print("\norder completed at attempt #: " + str(attempt))     
             all_strings.append(new_strand)
