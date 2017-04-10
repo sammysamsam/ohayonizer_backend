@@ -16,30 +16,6 @@ from strand_utilities import strand_utilities
 util = strand_utilities()
 
 
-# generates all five pentameric units
-def genfives():
-    global fives
-    lets = 'ACGT'
-    for i1 in lets:
-        for i2 in lets:
-            for i3 in lets:
-                for i4 in lets:
-                    for i5 in lets:
-                        new_five = i1 + i2 + i3 + i4 + i5
-                        restricted = False
-
-                        if (util.palindrome_check(new_five)):
-                            print(new_five)
-
-                        for sequence in ['AAAA', 'TTTT', 'CCC', 'GGG']:
-                            if sequence in new_five:
-                                restricted = True
-                                ##print(new_five + " is restricted.")
-                                break
-                        # NO POLYPURINES    
-                        if (not restricted):
-                            fives[new_five] = False
-
 
 
     #print("Length of fives: " + str(len(fives)) )
@@ -66,32 +42,6 @@ def gen_nmers(prev_nmers):
                 new_nmers[new_nmer] = False
     return new_nmers
 
-
-# generates all seven nucleotide units in order
-def gensevens():
-    global sevens
-    lets = 'ACGT'
-    for i1 in lets:
-        for i2 in lets:
-            for i3 in lets:
-                for i4 in lets:
-                    for i5 in lets:
-                        for i6 in lets:
-                            for i7 in lets:
-                                new_seven = i1 + i2 + i3 + i4 + i5 + i6 + i7
-                                restricted = False
-                                if (util.palindrome_check(new_seven)):
-                                    print(new_seven)
-
-                                for sequence in util.full_restricted_seq:
-                                    if sequence in new_seven:
-                                        restricted = True
-                                        break
-                                
-                                # NO ALTERNATING PURINE-PYRIMIDINE (vice versa)
-                                if (not restricted):
-                                    sevens[new_seven] = False
-    #print("Length of sevens: " + str(len(sevens)) + "\n")
 
 
 #####################
@@ -134,21 +84,6 @@ def process_blueprint(strand_length, blueprint):
 
 
 #####################
-
-def get_first_six_bases(blueprint, blueprint_violation_array, complement_desired, front_edges):
-    possibilities = []
-    if len(blueprint) > 6:
-        possibilities = util.get_pentameric_possiblilities(blueprint[0:5], complement_desired)
-
-    if(len(possibilities)==0):
-        #print("no possibilities for first five bases")
-        return "none"
-    return random.choice(possibilities)
-
-def get_last_six_bases(sequence, blueprint, blueprint_violation_array, complement_desired, back_edges):
-
-
-
 
 def get_next_base(prev_4, prev_6, blueprint, blueprint_violation_array, curr_seq, curr_length, complement_desired, nmers, mmers):
     global restricted_sequences
@@ -200,7 +135,7 @@ def get_next_base(prev_4, prev_6, blueprint, blueprint_violation_array, curr_seq
 # generates a new string of size n that doesn't intersect with existing strings
 # those other strings are encoded in the fives
 
-def gen_string(strand_length, blueprint, complement_desired, strand_list, front_edges = [], back_edges = []):
+def gen_string(strand_length, blueprint, complement_desired, strand_list, front_edges = []):
     global all_strings
     global fives
     global sevens
@@ -212,6 +147,7 @@ def gen_string(strand_length, blueprint, complement_desired, strand_list, front_
     new_strand = []
 
     #ensure enough unadded units are available?
+
     for n in range(5, 10): # start at 5s and then if after 200 attempts doesn't work go forth
         m = n + 2
         attempt = 1
@@ -223,8 +159,18 @@ def gen_string(strand_length, blueprint, complement_desired, strand_list, front_
 
             
     ###########
+    
             added_units = {0:[],1:[],2:[],3:[],4:[]}
-            new_strand = get_first_six_bases(blueprint, blueprint_violation_array , complement_desired)
+            first_six = 6
+            if len(strand_length) < 6:
+                first_six = len(strand_length)
+            for num in range(first_six, 0, -1):
+                prev_4 = 
+                prev_6 = 
+
+
+
+
     ###########
 
             curr_length = len(new_strand)

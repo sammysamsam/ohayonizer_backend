@@ -1,14 +1,15 @@
 from strand_utilities import strand_utilities
+from nongeneric_gen_sequences import *
+import pprint
+
+
 util = strand_utilities()
 
-full_strand_recipe_list = [] # [ ['a','b','c'] , ['a','b'] ] -> ab'c , ab 
-component_list = {}
 
-def get_front_edges(strandname):
-    global full_strand_recipe_list
+def get_front_edges(strandname, component_list, full_strand_recipe):
     edges = []
     complement_edges = []
-    for recipe in full_strand_recipe_list:
+    for recipe in full_strand_recipe:
         prev_edge = ""
 
         for comp_name in recipe:
@@ -17,64 +18,151 @@ def get_front_edges(strandname):
                     edges.append(prev_edge)
                 if strandname + "'" == comp_name:
                     complement_edges.append(prev_edge)
-            
-            seq = component_list[comp_name]
+
+            seq = ""
+            for c in component_list:
+                if c['name'] == comp_name:
+                    seq = c['sequence']
+                if c['name'] + "'" == comp_name:            
+                    seq = util.reverse_complement(c['sequence'])    
+
             if len(seq) >= 4:
-                prev_edge = seq[len(seq)-4 : len(seq)]
-                if "'" in comp_name:            
-                    prev_edge = util.reverse_complement(prev_edge)
+                prev_edge = seq[len(seq)-6 : len(seq)]
             else:
                 prev_edge = ""
-    return [edges,complement_edges]
 
-#test:
-# full_strand_recipe_list = [['a','b','c','b']]
-# component_list =  {'a':'ATCGAT','b':"",'c':"AAAA"}
-# x = get_front_edges('b')
-# print(str(x))
-# print("\n.............\n")
+    return [edges, complement_edges]
 
-def get_back_edges(strandname):
-    global full_strand_recipe_list
-    edges = []
-    complement_edges = []
-    for recipe in full_strand_recipe_list:
-        prev_is_strand = False
-        prev_is_complement_strand = False
 
-        for comp_name in recipe:
-            if strandname == comp_name:
-                prev_is_strand = True
-            if strandname + "'" == comp_name:
-                prev_is_complement_strand = True
+def generate_strands(component_list, full_strand_recipe):
+    """
+    Generate strands brah
+
+    Params:
+        component_list (dict): dictionary of representing attributes of desired components 
+            i.e. {'name':'a', 'length':15, 'blueprint':"", 'complement_desired':True}
+        full_strand_recipe (list):  list of desired full strands 
+            i.e.{ 'full strand name':['a','b','c'] , 'full strand name2': ['a','b'] }
+
+    """
+    attempts = 0
+
+    while attempts < 100:
+        for component in component_list:
+            component['sequence'] = ''
+        
+        done = True
+        for index in range(0, len(component_list)):
+            component = component_list[index]
+            print("at "+component['name'])
+
+            front_edges = get_front_edges(component['name'], component_list, full_strand_recipe)
+            print('edges: ' + str(front_edges))
+
+            seq = gen_string(component['length'], component['blueprint'], component['complement_desired'], front_edges[0], front_edges[1])
             
-            seq = component_list[comp_name]
-            if len(seq) >= 4:
-                if prev_is_strand:
-                    edges.append(seq[0 : 4])
-                if prev_is_complement_strand:
-                    complement_edges.append(util.reverse_complement(seq[0 : 4]))
+            if seq == '':
+                print("******** BACK")
+                if index == 0:
+                    attempts +=1
+                    done = False
+                    break
 
-    return [edges,complement_edges]
+                component_list[index-1]['sequence'] = ''
+                index -= 1
+            else:
+                print(seq+"\n")
+                component['sequence'] = seq
 
-#test:
-# full_strand_recipe_list = [['a','b','c','b','a']]
-# component_list =  {'a':'ATCGAT','b':"",'c':"AAAA"}
-# x = get_back_edges('b')
-# print(str(x))
+        if done:
+            break
 
-def generate_empty_component_list(name_list):
-    component_list = {}
-    for name in name_list:
-        component_list[name] = ""
-    return component_list
 
-def generate_strands(name_list, full_strand_recipe_list):
-    comp_list = generate_empty_component_list(name_list)
-    index = 0
-    while index < len(name_list):
+    pprint.pprint(component_list)
+    assembleFullStrands(component_list, full_strand_recipe)
+ 
 
-    	index +=1
+def assembleFullStrands(component_list, full_strand_recipe):
+    fullstrands = {}
+
+    for recipe in full_strand_recipe:
+        seq = ''       
+        name = ''
+        for comp_name in recipe:
+            name += comp_name +" "
+
+            found = False
+            for c in component_list:
+                if c['name'] == comp_name:
+                    seq += c['sequence']
+                    found = True
+                elif c['name'] + "'" == comp_name:            
+                    seq += util.reverse_complement(c['sequence'])
+                    found = True
+            if not found:
+                print(' COULD NOT FIND '+ comp_name) 
+
+
+            fullstrands[name] = seq
+
+    pprint.pprint(fullstrands)
+    return fullstrands
+
+
+#---------------------EXPERIMENT-----------------------------------------------------------------------------------------
+
+e = {'name':'e', 'length':5, 'blueprint':"", 'complement_desired':True, 'sequence':''}
+z = {'name':'z', 'length':5, 'blueprint':"", 'complement_desired':True, 'sequence':''}
+y = {'name':'y', 'length':5, 'blueprint':"", 'complement_desired':True, 'sequence':''}
+a = {'name':'a', 'length':5, 'blueprint':"", 'complement_desired':True, 'sequence':''}
+b = {'name':'b', 'length':12, 'blueprint':"", 'complement_desired':True, 'sequence':''}
+c = {'name':'c', 'length':8, 'blueprint':"", 'complement_desired':True, 'sequence':''}
+d = {'name':'d', 'length':15, 'blueprint':"", 'complement_desired':True, 'sequence':''}
+f = {'name':'f', 'length':5, 'blueprint':"", 'complement_desired':True, 'sequence':''}
+w = {'name':'w', 'length':5, 'blueprint':"", 'complement_desired':True, 'sequence':''}
+x = {'name':'x', 'length':5, 'blueprint':"", 'complement_desired':True, 'sequence':''}
+g = {'name':'g', 'length':15, 'blueprint':"", 'complement_desired':True, 'sequence':''}
+
+component_list = [y,z,e,a,b,c,d,f,w,x,g]
+
+# full_strand_recipe = {}
+# full_strand_recipe['1'] = ['a','b''c']
+# full_strand_recipe['2'] = ["a'","b"] 
+# full_strand_recipe['3'] = ['d','e','f',"a'"]
+
+full_strand_recipe = [ ['b'] , ['d'] ]
+full_strand_recipe += [ ["d'", "z'"] , ["c'", 'a'] , ["a'", 'c'] , ["d'", 'y'] , ["b'", "a'"] ]
+full_strand_recipe += [ ["e'", "y'", 'd'] ]
+full_strand_recipe += [ ['a', 'b', "e'", 'z', 'd'] , ["d'", 'y', 'e', "b'"] ]  
+full_strand_recipe += [ ["g'", 'x', "f'","d'"] , ["y'", 'x','f', "d'"] ]
+
+print(full_strand_recipe)
+
+generate_strands(component_list, full_strand_recipe)
+#print(get_front_edges('b', component_list, full_strand_recipe))
+
+
+#-------------------------TEST-------------------------------------------------------------------------------------
+
+"""
+a = {'name':'a', 'length':15, 'blueprint':"", 'complement_desired':True, 'sequence':''}
+b = {'name':'b', 'length':15, 'blueprint':"", 'complement_desired':True, 'sequence':''}
+c = {'name':'c', 'length':15, 'blueprint':"", 'complement_desired':False, 'sequence':''}
+d = {'name':'d', 'length':15, 'blueprint':"", 'complement_desired':False, 'sequence':''}
+e = {'name':'e', 'length':15, 'blueprint':"", 'complement_desired':False, 'sequence':''}
+f = {'name':'f', 'length':15, 'blueprint':"", 'complement_desired':False, 'sequence':''}
+
+component_list = [b,c,d,e,f,a]
+full_strand_recipe = [ ['a','b','c'], ["a'","b"], ['d','e','f',"a'"] ] 
+print(full_strand_recipe)
+
+generate_strands(component_list, full_strand_recipe)
+#print(get_front_edges('b', component_list, full_strand_recipe))
+
+
+"""
+
+
 
 
 

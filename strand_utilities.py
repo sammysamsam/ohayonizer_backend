@@ -3,7 +3,7 @@ class strand_utilities:
 
 
     
-    full_restricted_seq = ['AAAA', 'TTTT', 'CCC', 'GGG']# + palindromic septameric units + palindromic pentameric units + alternating pyurine + pyrimidine
+    full_restricted_seq = ['AAAA', 'TTTT', 'CCC', 'GGG', 'GGGG', 'CCCC']# + palindromic septameric units + palindromic pentameric units + alternating pyurine + pyrimidine
 
     def __init__(self):
         self.gen_restricted_sequences()
@@ -79,7 +79,7 @@ class strand_utilities:
     def get_new_restriction_score(e_, seq, new_base, complement_desired):
 
         score = 0
-        new_seq = seq+new_base
+        new_seq = seq + new_base
         seq_len = len(new_seq)
 
         #restricted seq check
