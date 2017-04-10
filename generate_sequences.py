@@ -31,7 +31,7 @@ def genfives():
                         if (util.palindrome_check(new_five)):
                             print(new_five)
 
-                        for sequence in ['AAAA', 'TTTT', 'CCC', 'GGG'] :
+                        for sequence in ['AAAA', 'TTTT', 'CCC', 'GGG']:
                             if sequence in new_five:
                                 restricted = True
                                 ##print(new_five + " is restricted.")
@@ -43,6 +43,29 @@ def genfives():
 
 
     #print("Length of fives: " + str(len(fives)) )
+
+def gen_nmers(prev_nmers):
+    ''' Returns the dictionary of n+1mers using the nmer list passed in '''
+    letters = 'ACGT'
+    new_nmers = {}
+    for nmer in prev_nmers:
+        for letter in letters:
+            new_nmer = nmer + letter
+            restricted = False
+
+            if (util.palindrome_check(new_nmer)):
+                print(new_nmer)
+
+            for sequence in ['AAAA', 'TTTT', 'CCC', 'GGG']:
+                if sequence in new_nmer:
+                    restricted = True
+                    ##print(new_five + " is restricted.")
+                    break
+            # NO POLYPURINES    
+            if (not restricted):
+                new_nmers[new_nmer] = False
+    return new_nmers
+
 
 # generates all seven nucleotide units in order
 def gensevens():
@@ -127,10 +150,8 @@ def get_last_six_bases(sequence, blueprint, blueprint_violation_array, complemen
 
 
 
-def get_next_base(prev_4, prev_6, blueprint, blueprint_violation_array, curr_seq, curr_length, complement_desired):
+def get_next_base(prev_4, prev_6, blueprint, blueprint_violation_array, curr_seq, curr_length, complement_desired, nmers, mmers):
     global restricted_sequences
-    global fives
-    global sevens 
 
     blueprint_score = blueprint_violation_array[curr_length]-blueprint_violation_array[curr_length-1]
     blueprint_base = blueprint[curr_length]   
@@ -147,26 +168,26 @@ def get_next_base(prev_4, prev_6, blueprint, blueprint_violation_array, curr_seq
     #CASE: next base is NOT blueprint base but unit contain blueprint bases
     next_possible_bases = []
     for base in 'ACGT':    
-        pentameric_unit = prev_4 + base         # test pentameric unit
-        septameric_unit = prev_6 + base         # test septameric unit
+        n_unit = prev_4 + base         # test pentameric unit
+        m_unit = prev_6 + base         # test septameric unit
         
         #CHECK: new base creates unwanted restricted sequence
         new_score = util.get_new_restriction_score(curr_seq, base, complement_desired)        
 
-        p_ = fives.get(pentameric_unit, False)   # pentameric unit exists
-        s_ = sevens.get(septameric_unit, False)  # septameric unit exists
+        n_ = nmers.get(n_unit, False)   # pentameric unit exists
+        m_ = mmers.get(m_unit, False)  # septameric unit exists
 
         # CHECK: new unit's reverse complement exists
         if complement_desired:
-            five_comp = util.reverse_complement(pentameric_unit)
-            seven_comp = util.reverse_complement(septameric_unit)
-            if fives.get(five_comp, False) or sevens.get(seven_comp, False):
+            n_comp = util.reverse_complement(n_unit)
+            m_comp = util.reverse_complement(m_unit)
+            if nmers.get(five_comp, False) or mmerss.get(seven_comp, False):
                 #print(" comp bad ")    
                 continue
         
-        #print("new score : " + str(new_score) + "|  " + pentameric_unit +":"+ str(p_) + "  || "+ septameric_unit + ":" + str(s_))
+        #print("new score : " + str(new_score) + "|  " + n_unit +":"+ str(p_) + "  || "+ m_unit + ":" + str(s_))
 
-        if (new_score == blueprint_score) and (not p_) and (not s_): 
+        if (new_score == blueprint_score) and (not n_) and (not m_): 
             next_possible_bases.append(base)
 
     #print(str(next_possible_bases)+"\n")
@@ -191,120 +212,110 @@ def gen_string(strand_length, blueprint, complement_desired, strand_list, front_
     new_strand = []
 
     #ensure enough unadded units are available?
-    
-    attempt = 1
-    while(attempt < 10):
+    for n in range(5, 10): # start at 5s and then if after 200 attempts doesn't work go forth
+        m = n + 2
+        attempt = 1
+        while(attempt < 200):
 
-        #BACKTRACK VARIABLES
-        backtrack_array = []
-        backtrack_seq = [] 
+            #BACKTRACK VARIABLES
+            backtrack_array = []
+            backtrack_seq = [] 
 
-        
-###########
-        added_units = {0:[],1:[],2:[],3:[],4:[], 5[]}
-        new_strand = get_first_six_bases( blueprint, blueprint_violation_array , complement_desired, front_edges)
-###########
+            
+    ###########
+            added_units = {0:[],1:[],2:[],3:[],4:[]}
+            new_strand = get_first_six_bases(blueprint, blueprint_violation_array , complement_desired)
+    ###########
 
-        curr_length = len(new_strand)
-        if curr_length == 0:
-            return 'No starting bases given constraints of blueprint.'
+            curr_length = len(new_strand)
+            if curr_length == 0:
+                return 'No starting bases given constraints of blueprint.'
 
-        while (curr_length < strand_length-6):
+            while (curr_length < strand_length):
 
-            #get previous four/six bases for( _ _ _ _ + new base )
-            prev_4 = new_strand[len(new_strand) - 4:] 
-            prev_6 = ''                   
-            if curr_length >= 6:
-                prev_6 = new_strand[len(new_strand) - 6:] 
+                #get previous four/six bases for( _ _ _ _ + new base )
+                prev_4 = new_strand[len(new_strand) - 4:] 
+                prev_6 = ''                   
+                if curr_length >= 6:
+                    prev_6 = new_strand[len(new_strand) - 6:] 
 
-            next_possible_bases = get_next_base(prev_4, prev_6, blueprint, blueprint_violation_array, new_strand, curr_length,complement_desired)
+                next_possible_bases = get_next_base(prev_4, prev_6, blueprint, blueprint_violation_array, new_strand, curr_length,complement_desired)
 
-            #CASE: add possible base (CONTINUE)
-            if len(next_possible_bases) > 0:
-                chosen_unit = random.choice(next_possible_bases)
-
-                #update backtrack variables
-                next_possible_bases.remove(chosen_unit)
-                if(len(next_possible_bases) > 0):
-                    backtrack_array.append(next_possible_bases)
-                    backtrack_seq.append(new_strand)
-                
-                #add new strand
-                new_strand += chosen_unit 
-                
-                #update added_bases list
-                added_units[curr_length] = update_fives(prev_4 + chosen_unit, complement_desired) + update_sevens(prev_6 + chosen_unit, complement_desired)               
-
-            #CASE: not possible base (BACKTRACK)
-            else:
-                #print("# "+ str(new_strand))
-
-                backtrack_index = len(backtrack_array)-1
-                if(backtrack_index != -1):
-                   # print("backtrack length: "+str(len(backtrack_array)))
-                    
-                    revert_units(new_strand, backtrack_seq[backtrack_index], added_units ,complement_desired)
-                    backtrack_bases = backtrack_array[backtrack_index]
-                    backtrack_unit = random.choice(backtrack_bases)
-
-                    #BACKTRACK SEQUENCE                 
-                    new_strand = backtrack_seq[backtrack_index]
-                    curr_length = len(new_strand)
-
-                    #replace removed base with alternate base
-                    prev_4 = new_strand[len(new_strand) - 4:] 
-                    prev_6 = ''                   
-                    if curr_length >= 6:
-                        prev_6 = new_strand[len(new_strand) - 6:] 
-                    new_strand += backtrack_unit
-
-                    #update added units
-                    added_units[curr_length] = update_fives(prev_4 + backtrack_unit, complement_desired) + update_sevens(prev_6 + backtrack_unit, complement_desired)
+                #CASE: add possible base (CONTINUE)
+                if len(next_possible_bases) > 0:
+                    chosen_unit = random.choice(next_possible_bases)
 
                     #update backtrack variables
-                    if(len(backtrack_bases) > 1):
-                        backtrack_bases.remove(backtrack_unit)
-                        backtrack_array[backtrack_index] = backtrack_bases
-                    else:
-                        backtrack_seq.pop()
-                        backtrack_array.pop()
+                    next_possible_bases.remove(chosen_unit)
+                    if(len(next_possible_bases) > 0):
+                        backtrack_array.append(next_possible_bases)
+                        backtrack_seq.append(new_strand)
+                    
+                    #add new strand
+                    new_strand += chosen_unit 
+                    
+                    #update added_bases list
+                    added_units[curr_length] = update_nmers(prev_4 + chosen_unit, complement_desired, nmers, n) + update_nmers(prev_6 + chosen_unit, complement_desired, mmers, m)
 
-                    #print("\nBacktrack to: " + str(new_strand))
+                #CASE: not possible base (BACKTRACK)
                 else:
-                    #backtrack added 5/7 units
-                    print("stoped at: "+new_strand)
-                    print("***ATTEMPT #"+str(attempt)+"***\n")
-                    revert_units(new_strand, "", added_units, complement_desired)         
-                    new_strand = []
-                    break
+                    #print("# "+ str(new_strand))
 
-            curr_length += 1
-        
+                    backtrack_index = len(backtrack_array)-1
+                    if(backtrack_index != -1):
+                       # print("backtrack length: "+str(len(backtrack_array)))
+                        
+                        revert_units(new_strand, backtrack_seq[backtrack_index], added_units ,complement_desired)
+                        backtrack_bases = backtrack_array[backtrack_index]
+                        backtrack_unit = random.choice(backtrack_bases)
 
-######
+                        #BACKTRACK SEQUENCE                 
+                        new_strand = backtrack_seq[backtrack_index]
+                        curr_length = len(new_strand)
 
-        if len(new_strand) == strand_length-6:
-            new_strand = get_last_six_bases(new_strand ,blueprint, blueprint_violation_array , complement_desired, back_edges)
+                        #replace removed base with alternate base
+                        prev_4 = new_strand[len(new_strand) - 4:] 
+                        prev_6 = ''                   
+                        if curr_length >= 6:
+                            prev_6 = new_strand[len(new_strand) - 6:] 
+                        new_strand += backtrack_unit
 
-######
+                        #update added units
+                        added_units[curr_length] = update_nmers(prev_4 + backtrack_unit, complement_desired, nmers, n) + update_nmers(prev_6 + backtrack_unit, complement_desired, mmers, m)
 
+                        #update backtrack variables
+                        if(len(backtrack_bases) > 1):
+                            backtrack_bases.remove(backtrack_unit)
+                            backtrack_array[backtrack_index] = backtrack_bases
+                        else:
+                            backtrack_seq.pop()
+                            backtrack_array.pop()
 
-        if len(new_strand) == strand_length:
-            #print("\norder completed at attempt #: " + str(attempt))     
-            all_strings.append(new_strand)
-            #revert_units(new_strand, "", added_units, complement_desired)              
-            return str(new_strand)
-        else:
-            attempt += 1
+                        #print("\nBacktrack to: " + str(new_strand))
+                    else:
+                        #backtrack added 5/7 units
+                        print("stoped at: "+new_strand)
+                        print("***ATTEMPT #"+str(attempt)+"***\n")
+                        revert_units(new_strand, "", added_units, complement_desired, nmers, mmers, n)
+                        new_strand = []
+                        break
+
+                curr_length += 1
+            
+            if len(new_strand) == strand_length:
+                #print("\norder completed at attempt #: " + str(attempt))
+                all_strings.append(new_strand)
+                #revert_units(new_strand, "", added_units, complement_desired)
+                return str(new_strand)
+            else:
+                attempt += 1
 
     return "Could not generate a string in "+ str(attempt) + " attempts."
   
 
 #####################
 
-def revert_units(curr_seq, rev_seq, added_bases, complement_desired):
-    global fives
-    global sevens
+def revert_units(curr_seq, rev_seq, added_bases, complement_desired, nmers, mmers, n):
 
     curr_len = len(curr_seq)
     rev_len = len(rev_seq)
@@ -314,7 +325,7 @@ def revert_units(curr_seq, rev_seq, added_bases, complement_desired):
         for unit in added_bases[curr_index]:
 
             #print("remove: "+unit)
-            if len(unit) == 5:
+            if len(unit) == n:
                 fives[unit] = False
             else:
                 sevens[unit] = False
@@ -364,21 +375,52 @@ def update_sevens_approx(new_unit):
         i += 1
     return unit_list
 
+def update_nmers(new_unit, complement_desired, nmers, n):
+    ''' n is length of nmers '''
+    unit_list = []
+    if len(new_unit) == n:
+        if complement_desired and (not nmers.get(new_unit, True)):
+            unit_list.extend(update_nmers_approx(new_unit, nmers, n))
+
+        new_reverse_unit = util.reverse_complement(new_unit)
+        if (not nmers.get(new_reverse_unit, True)):
+            unit_list.extend(update_nmers_approx(new_reverse_unit, nmers, n))
+    return unit_list
+
+
+def update_nmers_approx(new_unit, nmers, n):
+    unit_list = []
+    lets = "ACGT"
+    i = 1
+    while i < n:
+        for let in lets:
+            new = new_unit[:i] + let + new_unit[i + 1:]
+            if (not nmers.get(new, True)):
+                nmers[new] = True
+                unit_list.append(new)
+        i += 1
+    return unit_list
+
+
 #Include all restricted sequences in the dictionary from the start
 
 
 
 ########          MAIN METHOD        ############## 
 
-# fives = {}
-# sevens = {}
-# all_strings = []
-# size_of_strand = 50
+fives = {}
+sevens = {}
+all_strings = []
+size_of_strand = 50
 
-# genfives()
-# gensevens()
-# print ("total fives: "+ str(len(fives)))
-# print ("total sevens: "+ str(len(sevens)) + "\n")
+genfives()
+gensevens()
+print ("total fives: "+ str(len(fives)))
+print ("total sevens: "+ str(len(sevens)) + "\n")
+
+nmers = gen_nmers(fives)
+mmers = gen_nmers(sevens)
+
 """
 #test1
 test_str = "GGoATooooAAAAooooAoAToGGoGGGoGooooATGCoo"
@@ -401,30 +443,30 @@ print("\n\nlength of fives used: "+ str(sum(fives.values())))
 
 #test2
 
-# test2 = gen_string(100, "", True)
-# print("\nresult: " + test2)
-# print("length of fives used: "+ str(sum(fives.values())))
-# print("length of sevens used: "+ str(sum(sevens.values())))
+test2 = gen_string(100, "", True)
+print("\nresult: " + test2)
+print("length of fives used: "+ str(sum(fives.values())))
+print("length of sevens used: "+ str(sum(sevens.values())))
 
-# test3 = gen_string(100, "", True)
-# print("\nresult: " + test3)
-# print("length of fives used: "+ str(sum(fives.values())))
-# print("length of sevens used: "+ str(sum(sevens.values())))
+test3 = gen_string(100, "", True)
+print("\nresult: " + test3)
+print("length of fives used: "+ str(sum(fives.values())))
+print("length of sevens used: "+ str(sum(sevens.values())))
 
-# test4 = gen_string(100, "", True)
-# print("\nresult: " + test4)
-# print("length of fives used: "+ str(sum(fives.values())))
-# print("length of sevens used: "+ str(sum(sevens.values())))
+test4 = gen_string(100, "", True)
+print("\nresult: " + test4)
+print("length of fives used: "+ str(sum(fives.values())))
+print("length of sevens used: "+ str(sum(sevens.values())))
 
-# test5 = gen_string(100, "", True)
-# print("\nresult: " + test5)
-# print("length of fives used: "+ str(sum(fives.values())))
-# print("length of sevens used: "+ str(sum(sevens.values())))
+test5 = gen_string(100, "", True)
+print("\nresult: " + test5)
+print("length of fives used: "+ str(sum(fives.values())))
+print("length of sevens used: "+ str(sum(sevens.values())))
 
-# print("\n___________\n1: " + test2)
-# print("2: " + test3)
-# print("3: " + test4)
-# print("4: " + test5)
+print("\n___________\n1: " + test2)
+print("2: " + test3)
+print("3: " + test4)
+print("4: " + test5)
 
 """
 #test3
