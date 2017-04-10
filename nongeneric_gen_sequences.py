@@ -107,7 +107,7 @@ def process_blueprint(strand_length, blueprint):
 
 #####################
 
-def get_first_six_bases (strand_length, blueprint, blueprint_violation_array, complement_desired, front_edges, complement_front_edges):
+def get_first_six_bases(strand_length, blueprint, blueprint_violation_array, complement_desired, front_edges, complement_front_edges):
     new_strand = ""
 
     first_bases_len = 6
@@ -237,7 +237,7 @@ def gen_string(strand_length, blueprint, complement_desired, front_edges = [], c
 
         curr_length = len(new_strand)
         if curr_length == 0:
-            print('No starting bases given constraints.')
+            #print('No starting bases given constraints.')
             attempt += 1
             continue
 
@@ -304,8 +304,8 @@ def gen_string(strand_length, blueprint, complement_desired, front_edges = [], c
                     #print("\nBacktrack to: " + str(new_strand))
                 else:
                     #backtrack added 5/7 units
-                    print("stoped at: "+new_strand)
-                    print("***ATTEMPT #"+str(attempt)+"***\n")
+                    #print("stoped at: "+new_strand)
+                    #print("***ATTEMPT #"+str(attempt)+"***\n")
                     revert_units(new_strand, "", added_units, complement_desired)         
                     new_strand = ""
                     break
@@ -320,7 +320,7 @@ def gen_string(strand_length, blueprint, complement_desired, front_edges = [], c
 
         attempt += 1
 
-    print( "Could not generate a string in "+ str(attempt) + " attempts." )
+    #print( "Could not generate a string in "+ str(attempt) + " attempts." )
     return ""
   
 

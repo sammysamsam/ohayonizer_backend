@@ -26,10 +26,8 @@ def get_front_edges(strandname, component_list, full_strand_recipe):
                 if c['name'] + "'" == comp_name:            
                     seq = util.reverse_complement(c['sequence'])    
 
-            if len(seq) >= 4:
-                prev_edge = seq[len(seq)-6 : len(seq)]
-            else:
-                prev_edge = ""
+            prev_edge = seq[-6:]
+
 
     return [edges, complement_edges]
 
@@ -48,38 +46,46 @@ def generate_strands(component_list, full_strand_recipe):
     attempts = 0
 
     while attempts < 100:
-        for component in component_list:
-            component['sequence'] = ''
         
-        done = True
+        fail = False
+        success_count = 0
+
         for index in range(0, len(component_list)):
             component = component_list[index]
-            print("at "+component['name'])
-
             front_edges = get_front_edges(component['name'], component_list, full_strand_recipe)
-            print('edges: ' + str(front_edges))
 
             seq = gen_string(component['length'], component['blueprint'], component['complement_desired'], front_edges[0], front_edges[1])
             
             if seq == '':
-                print("******** BACK")
                 if index == 0:
                     attempts +=1
-                    done = False
+                    fail = True
                     break
 
-                component_list[index-1]['sequence'] = ''
                 index -= 1
+                #print("backtrack to "+component_list[index-1]['name'])
+                print("backtrack to index: "+str(index))
             else:
-                print(seq+"\n")
                 component['sequence'] = seq
 
-        if done:
-            break
+        if fail:
+            print('fail at '+ component['name'])
+            attempts += 1
+            success_count = 0
+            for component in component_list:
+                component['sequence'] = ''
+            random.shuffle(component_list)
+        else:
+            success_count += 1
+            print('success count '+ str(success_count))
+            if success_count == 2:
+                break
 
-
-    pprint.pprint(component_list)
-    assembleFullStrands(component_list, full_strand_recipe)
+    if attempts < 100:
+        pprint.pprint(component_list)
+        assembleFullStrands(component_list, full_strand_recipe)
+    else:
+        print("FAIL")
  
 
 def assembleFullStrands(component_list, full_strand_recipe):
