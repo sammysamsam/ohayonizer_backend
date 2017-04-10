@@ -112,9 +112,9 @@ def process_blueprint(strand_length, blueprint):
 
 #####################
 
-def get_first_six_bases(blueprint, blueprint_violation_array, complement_desired):
+def get_first_six_bases(blueprint, blueprint_violation_array, complement_desired, front_edges):
     possibilities = []
-    if len(blueprint) > 4:
+    if len(blueprint) > 6:
         possibilities = util.get_pentameric_possiblilities(blueprint[0:5], complement_desired)
 
     if(len(possibilities)==0):
@@ -122,7 +122,7 @@ def get_first_six_bases(blueprint, blueprint_violation_array, complement_desired
         return "none"
     return random.choice(possibilities)
 
-def get_last_six_bases(sequence, blueprint, blueprint_violation_array, complement_desired, )
+def get_last_six_bases(sequence, blueprint, blueprint_violation_array, complement_desired, back_edges):
 
 
 
@@ -202,7 +202,7 @@ def gen_string(strand_length, blueprint, complement_desired, strand_list, front_
         
 ###########
         added_units = {0:[],1:[],2:[],3:[],4:[], 5[]}
-        new_strand = get_first_six_bases(blueprint, blueprint_violation_array , complement_desired)
+        new_strand = get_first_six_bases( blueprint, blueprint_violation_array , complement_desired, front_edges)
 ###########
 
         curr_length = len(new_strand)
@@ -282,8 +282,10 @@ def gen_string(strand_length, blueprint, complement_desired, strand_list, front_
         
 
 ######
+
         if len(new_strand) == strand_length-6:
-            new_strand = get_last_six_bases(new_strand ,blueprint, blueprint_violation_array , complement_desired)
+            new_strand = get_last_six_bases(new_strand ,blueprint, blueprint_violation_array , complement_desired, back_edges)
+
 ######
 
 
