@@ -104,40 +104,6 @@ class strand_utilities:
 ###################
 
 
-    def get_pentameric_possiblilities(self, blueprint_pent, complement_desired):
-        init_score = strand_utilities.get_new_restriction_score(self, blueprint_pent[0:2] , blueprint_pent[2],complement_desired)
-        init_score += strand_utilities.get_new_restriction_score(self, blueprint_pent[0:3] , blueprint_pent[3],complement_desired)
-        init_score += strand_utilities.get_new_restriction_score(self, blueprint_pent[0:4] , blueprint_pent[4],complement_desired)
-
-
-        results = []
-        palim_results = []
-        if(len(blueprint_pent) == 5):
-            lets = []
-
-            for i in range(0,5):
-                if(blueprint_pent[i] == 'o'):
-                    lets.append("ATCG")
-                else:
-                    lets.append(blueprint_pent[i])
-            
-            for i1 in lets[0]:
-                for i2 in lets[1]:
-                    for i3 in lets[2]:
-                        for i4 in lets[3]:
-                            for i5 in lets[4]:
-                                
-                                new_five = i1 + i2 + i3 + i4 + i5
-                                new_score = strand_utilities.get_new_restriction_score(self, i1+i2, i3,complement_desired)
-                                new_score += strand_utilities.get_new_restriction_score(self, i1+i2+i3, i4,complement_desired)
-                                new_score += strand_utilities.get_new_restriction_score(self, i1+i2+i3+i4, i5,complement_desired)
-                               
-                                if (new_score == init_score):
-                                    results.append(new_five)
-            return results
-
-
-
 
 #TEST AREA 
 

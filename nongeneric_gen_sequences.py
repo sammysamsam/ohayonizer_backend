@@ -105,52 +105,7 @@ def process_blueprint(strand_length, blueprint):
 
 
 
-#####################
-
-def get_first_six_bases(strand_length, blueprint, blueprint_violation_array, complement_desired, front_edges, complement_front_edges):
-    new_strand = ""
-
-    first_bases_len = 6
-    if strand_length < 6:
-        first_bases_len = strand_length
-
-    for num in range(0 , first_bases_len):
-
-        good_base_count = {'A':0, 'T':0, 'C':0, 'G':0}
-
-        for e in front_edges:
-            combined_edge = e + new_strand
-
-            prev_4 = combined_edge[-4:]
-            prev_6 = combined_edge[-6:]
-
-            bases = get_next_base(prev_4, prev_6, blueprint, blueprint_violation_array, combined_edge, len(new_strand), complement_desired)
-            
-            for base in bases:
-                good_base_count[base] += 1
-        
-        for e in complement_front_edges:
-            combined_edge = e + util.reverse_complement(new_strand)
-
-            prev_4 = combined_edge[-4:]
-            prev_6 = combined_edge[-6:]
-
-            bases = get_next_base(prev_4, prev_6, blueprint, blueprint_violation_array, combined_edge, len(new_strand), complement_desired)
-            
-            for base in bases:
-                good_base_count[base] += 1
-
-
-        base_choices = []
-        for b in good_base_count:
-            if good_base_count[b] == len(front_edges) + len(complement_front_edges):
-                base_choices.append(b)
-
-        if len(base_choices) == 0:
-            return ""
-        else:
-            new_strand += random.choice(base_choices)
-    return new_strand
+####################
 
 
 def get_next_base(prev_4, prev_6, blueprint, blueprint_violation_array, curr_seq, curr_length, complement_desired):
@@ -173,12 +128,8 @@ def get_next_base(prev_4, prev_6, blueprint, blueprint_violation_array, curr_seq
     #CASE: next base is NOT blueprint base but unit contain blueprint bases
     next_possible_bases = []
     for base in 'ACGT':     
-        if isinstance(prev_4,list):
-            print(prev_4)
         pentameric_unit = prev_4 + base         # test pentameric unit
         septameric_unit = prev_6 + base         # test septameric unit
-        
-        # print(pentameric_unit + " " + septameric_unit)
 
         #CHECK: new base creates unwanted restricted sequence
         new_score = util.get_new_restriction_score(curr_seq, base, complement_desired)        
@@ -216,24 +167,66 @@ def gen_string(strand_length, blueprint, complement_desired, front_edges = [], c
 
     blueprint = process_blueprint(strand_length, blueprint)
     blueprint_violation_array = get_blueprint_violation_array(blueprint, complement_desired)
-    #print("\n order processed\nblueprint: "+str(blueprint)+"\nblueprint violation array: "+str(blueprint_violation_array)+"\n\n")
-
     new_strand = ""
-
-    #ensure enough unadded units are available?
     
     attempt = 1
     while(attempt < 30):
 
-        #BACKTRACK VARIABLES
+        #Backtrack Variables
         backtrack_array = []
         backtrack_seq = [] 
+        added_units = {}
 
-###########
-        added_units = {0:[], 1:[], 2:[], 3:[], 4:[], 5:[]}
-        new_strand = get_first_six_bases(strand_length, blueprint, blueprint_violation_array, complement_desired, front_edges, complement_front_edges)
 
-###########
+########### FIRST 6 BASES
+
+        first_bases_len = 6
+        if strand_length < 6:
+            first_bases_len = strand_length
+
+        # Get Possible Bases
+        for num in range(0 , first_bases_len):
+            good_base_count = {'A':0, 'T':0, 'C':0, 'G':0}
+
+            for e in front_edges:
+                combined_edge = e + new_strand
+
+                prev_4 = combined_edge[-4:]
+                prev_6 = combined_edge[-6:]
+         
+                for base in get_next_base(prev_4, prev_6, blueprint, blueprint_violation_array, combined_edge, len(new_strand), complement_desired):
+                    good_base_count[base] += 1
+            
+            for e in complement_front_edges:
+                combined_edge = e + util.reverse_complement(new_strand)
+
+                prev_4 = combined_edge[-4:]
+                prev_6 = combined_edge[-6:]
+            
+                for base in get_next_base(prev_4, prev_6, blueprint, blueprint_violation_array, combined_edge, len(new_strand), complement_desired):
+                    good_base_count[util.complement(base)] += 1
+
+            #Pick Possible Base
+            base_choices = []
+            for b in good_base_count:
+                if good_base_count[b] == len(front_edges) + len(complement_front_edges):
+                    base_choices.append(b)
+            if len(base_choices) > 0:
+                chosen_base = random.choice(base_choices)
+                
+                #Update Backtrack Arrays
+                for e in front_edges:
+                    added_units[num] = update_fives( (e + new_strand)[-4:] + chosen_base, complement_desired)
+                    added_units[num] = update_sevens( (e + new_strand)[-6:] + chosen_base, complement_desired)      
+                
+                #Add Chosen Base
+                new_strand += chosen_base     
+            else:
+                new_strand = ""
+                break  
+
+         
+########### ADD REST OF BASES
 
         curr_length = len(new_strand)
         if curr_length == 0:
@@ -242,8 +235,6 @@ def gen_string(strand_length, blueprint, complement_desired, front_edges = [], c
             continue
 
         while (curr_length < strand_length):
-
-            #get previous four/six bases for( _ _ _ _ + new base )
             prev_4 = new_strand[len(new_strand) - 4:]
             prev_6 = ''                   
             if curr_length >= 6:
@@ -269,44 +260,37 @@ def gen_string(strand_length, blueprint, complement_desired, front_edges = [], c
 
             #CASE: not possible base (BACKTRACK)
             else:
-                #print("# "+ str(new_strand))
 
                 backtrack_index = len(backtrack_array)-1
                 if(backtrack_index != -1):
-                   # print("backtrack length: "+str(len(backtrack_array)))
                     
                     revert_units(new_strand, backtrack_seq[backtrack_index], added_units ,complement_desired)
                     backtrack_bases = backtrack_array[backtrack_index]
                     backtrack_unit = random.choice(backtrack_bases)
 
-                    #BACKTRACK SEQUENCE                 
+                    #Backtrack Sequence              
                     new_strand = backtrack_seq[backtrack_index]
                     curr_length = len(new_strand)
 
-                    #replace removed base with alternate base
+                    #Replace removed base with alternate base
                     prev_4 = new_strand[len(new_strand) - 4:] 
                     prev_6 = ''                   
                     if curr_length >= 6:
                         prev_6 = new_strand[len(new_strand) - 6:] 
                     new_strand += backtrack_unit
 
-                    #update added units
+                    #Update added units
                     added_units[curr_length] = update_fives(prev_4 + backtrack_unit, complement_desired) + update_sevens(prev_6 + backtrack_unit, complement_desired)
 
-                    #update backtrack variables
+                    #Update backtrack variables
                     if(len(backtrack_bases) > 1):
                         backtrack_bases.remove(backtrack_unit)
                         backtrack_array[backtrack_index] = backtrack_bases
                     else:
                         backtrack_seq.pop()
                         backtrack_array.pop()
-
-                    #print("\nBacktrack to: " + str(new_strand))
                 else:
-                    #backtrack added 5/7 units
-                    #print("stoped at: "+new_strand)
-                    #print("***ATTEMPT #"+str(attempt)+"***\n")
-                    revert_units(new_strand, "", added_units, complement_desired)         
+                    #print("stoped at: "+new_strand + "\n***ATTEMPT #"+str(attempt)+"***\n")       
                     new_strand = ""
                     break
 
@@ -314,10 +298,9 @@ def gen_string(strand_length, blueprint, complement_desired, front_edges = [], c
 
         if len(new_strand) == strand_length:
             #print("\norder completed at attempt #: " + str(attempt))     
-            all_strings.append(new_strand)
-            #revert_units(new_strand, "", added_units, complement_desired)              
+            all_strings.append(new_strand)            
             return str(new_strand)
-
+        revert_units(new_strand, "", added_units, complement_desired)             
         attempt += 1
 
     #print( "Could not generate a string in "+ str(attempt) + " attempts." )

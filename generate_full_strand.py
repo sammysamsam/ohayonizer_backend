@@ -44,11 +44,11 @@ def generate_strands(component_list, full_strand_recipe):
 
     """
     attempts = 0
-
+    success_count = 0
     while attempts < 100:
         
         fail = False
-        success_count = 0
+
 
         for index in range(0, len(component_list)):
             component = component_list[index]
@@ -58,7 +58,6 @@ def generate_strands(component_list, full_strand_recipe):
             
             if seq == '':
                 if index == 0:
-                    attempts +=1
                     fail = True
                     break
 
@@ -70,22 +69,20 @@ def generate_strands(component_list, full_strand_recipe):
 
         if fail:
             print('fail at '+ component['name'])
-            attempts += 1
             success_count = 0
+            print('RESTART')
             for component in component_list:
                 component['sequence'] = ''
             random.shuffle(component_list)
+        
         else:
             success_count += 1
-            print('success count '+ str(success_count))
+            print('Success count '+ str(success_count))
             if success_count == 2:
-                break
-
-    if attempts < 100:
-        pprint.pprint(component_list)
-        assembleFullStrands(component_list, full_strand_recipe)
-    else:
-        print("FAIL")
+                pprint.pprint(component_list)
+                assembleFullStrands(component_list, full_strand_recipe) 
+                return component_list  
+    print("FAIL")
  
 
 def assembleFullStrands(component_list, full_strand_recipe):
@@ -117,19 +114,20 @@ def assembleFullStrands(component_list, full_strand_recipe):
 
 #---------------------EXPERIMENT-----------------------------------------------------------------------------------------
 
+d = {'name':'d', 'length':15, 'blueprint':"", 'complement_desired':True, 'sequence':''}
+g = {'name':'g', 'length':15, 'blueprint':"", 'complement_desired':True, 'sequence':''}
 e = {'name':'e', 'length':5, 'blueprint':"", 'complement_desired':True, 'sequence':''}
 z = {'name':'z', 'length':5, 'blueprint':"", 'complement_desired':True, 'sequence':''}
 y = {'name':'y', 'length':5, 'blueprint':"", 'complement_desired':True, 'sequence':''}
 a = {'name':'a', 'length':5, 'blueprint':"", 'complement_desired':True, 'sequence':''}
 b = {'name':'b', 'length':12, 'blueprint':"", 'complement_desired':True, 'sequence':''}
 c = {'name':'c', 'length':8, 'blueprint':"", 'complement_desired':True, 'sequence':''}
-d = {'name':'d', 'length':15, 'blueprint':"", 'complement_desired':True, 'sequence':''}
 f = {'name':'f', 'length':5, 'blueprint':"", 'complement_desired':True, 'sequence':''}
 w = {'name':'w', 'length':5, 'blueprint':"", 'complement_desired':True, 'sequence':''}
 x = {'name':'x', 'length':5, 'blueprint':"", 'complement_desired':True, 'sequence':''}
-g = {'name':'g', 'length':15, 'blueprint':"", 'complement_desired':True, 'sequence':''}
 
-component_list = [y,z,e,a,b,c,d,f,w,x,g]
+
+component_list = [y,b,d,g,z,e,a,c,f,w,x]
 
 # full_strand_recipe = {}
 # full_strand_recipe['1'] = ['a','b''c']
@@ -165,8 +163,8 @@ print(full_strand_recipe)
 generate_strands(component_list, full_strand_recipe)
 #print(get_front_edges('b', component_list, full_strand_recipe))
 
-
 """
+
 
 
 
