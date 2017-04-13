@@ -48,8 +48,6 @@ def generate_strands(component_list, full_strand_recipe):
     while attempts < 100:
         
         fail = False
-
-
         for index in range(0, len(component_list)):
             component = component_list[index]
             front_edges = get_front_edges(component['name'], component_list, full_strand_recipe)
@@ -111,6 +109,7 @@ def assembleFullStrands(component_list, full_strand_recipe):
     pprint.pprint(fullstrands)
     return fullstrands
 
+C=8; A/E/Z/Y = 5; B/D = 15; S = 6 or 7
 
 #---------------------EXPERIMENT-----------------------------------------------------------------------------------------
 
@@ -129,11 +128,6 @@ x = {'name':'x', 'length':5, 'blueprint':"", 'complement_desired':True, 'sequenc
 
 component_list = [y,b,d,g,z,e,a,c,f,w,x]
 
-# full_strand_recipe = {}
-# full_strand_recipe['1'] = ['a','b''c']
-# full_strand_recipe['2'] = ["a'","b"] 
-# full_strand_recipe['3'] = ['d','e','f',"a'"]
-
 full_strand_recipe = [ ['b'] , ['d'] ]
 full_strand_recipe += [ ["d'", "z'"] , ["c'", 'a'] , ["a'", 'c'] , ["d'", 'y'] , ["b'", "a'"] ]
 full_strand_recipe += [ ["e'", "y'", 'd'] ]
@@ -143,7 +137,6 @@ full_strand_recipe += [ ["g'", 'x', "f'","d'"] , ["y'", 'x','f', "d'"] ]
 print(full_strand_recipe)
 
 generate_strands(component_list, full_strand_recipe)
-#print(get_front_edges('b', component_list, full_strand_recipe))
 
 
 #-------------------------TEST-------------------------------------------------------------------------------------

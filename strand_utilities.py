@@ -76,7 +76,7 @@ class strand_utilities:
 
     """
 
-    def get_new_restriction_score(e_, seq, new_base, complement_desired):
+    def get_new_restriction_score(e_, seq, new_base):
 
         score = 0
         new_seq = seq + new_base
