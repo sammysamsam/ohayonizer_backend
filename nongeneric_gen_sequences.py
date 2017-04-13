@@ -276,13 +276,13 @@ def gen_string(strand_length, blueprint, complement_desired, front_edges=[], com
                     break
 
         if len(new_strand) == strand_length:
-            print("\norder completed at attempt #: " + str(attempt))                
+            #print("\norder completed at attempt #: " + str(attempt))                
             return str(new_strand)
 
         revert_units(new_strand, "", added_units, complement_desired)             
         attempt += 1
 
-    print( "Could not generate a string in "+ str(attempt) + " attempts." )
+    #print( "Could not generate a string in "+ str(attempt) + " attempts." )
     return ""
   
 
@@ -380,7 +380,7 @@ print("\n\nlength of fives used: "+ str(sum(fives.values())))
 
 
 #test2
-test2 = gen_string(17, "", True ,["ATAAGC",' ATATA','GGGGGG'])
+test2 = gen_string(77, "", True ,["ATAAGC",' ATATA','GGGGGG'])
 print(test2)
 
 test3 = gen_string(17, "", True)

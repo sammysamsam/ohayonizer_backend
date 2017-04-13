@@ -90,12 +90,12 @@ class strand_utilities:
                     score += 1
 
         #palindrome check
-        if(seq_len > 4):
-            six = new_seq[seq_len-4:]
+        if(seq_len >= 4):
+            six = new_seq[-4:]
             if e_.palindrome_check(six):
-                score += 1
+                score += 2
                 if six in seq:
-                    score += 1
+                    score += 3
 
         return score
 
