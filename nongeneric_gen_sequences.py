@@ -126,7 +126,8 @@ def get_next_base(blueprint, blueprint_violation_array, curr_seq, complement_des
     if len(curr_seq) > 6:
         front_edges = ['']
         complement_front_edges = []
-
+    else:
+        front_edges.append('')
 
     #CASE: next base is NOT blueprint base
     next_possible_bases = set(['A','T','C','G'])
@@ -147,7 +148,7 @@ def get_next_base(blueprint, blueprint_violation_array, curr_seq, complement_des
                 next_possible_bases.remove(base)
                 continue
             # CHECK: new unit
-            if not ((new_score == blueprint_score) and (not p_) and (not s_)): 
+            if (not new_score == blueprint_score) or p_ or  s_: 
                 next_possible_bases.remove(base)
                 
 
@@ -167,7 +168,7 @@ def get_next_base(blueprint, blueprint_violation_array, curr_seq, complement_des
             if complement_desired and (fives.get(util.reverse_complement(prev_4 + base), False) or sevens.get(util.reverse_complement(prev_6 + base), False)):
                 next_possible_bases.remove(base)
                 continue
-            if not ((new_score == blueprint_score) and (not p_) and (not s_)): 
+            if (not new_score == blueprint_score) or p_ or  s_: 
                 next_possible_bases.remove(base)
 
 
@@ -198,6 +199,39 @@ def get_next_base(blueprint, blueprint_violation_array, curr_seq, complement_des
         backtrack_seq.append(curr_seq)
 
     return chosen_base
+
+def backedge_check(curr_seq, back_edges, complement_back_edges):
+    global fives
+    global sevens
+
+    for e in back_edges:
+        combined_edge = curr_seq + e 
+        if fives.get(combined_edge[-5:], False) or sevens.get(combined_edge[-7:], False):
+            return False
+
+        for pos in range(1,len(e)):
+
+            p_ = fives.get(combined_edge[:-pos][-5:], False)   # pentameric unit exists
+            s_ = sevens.get(combined_edge[:-pos][-7:], False)  # septameric unit exists
+
+            if p_ or s_: 
+                return False
+                
+    for e in complement_back_edges:
+        combined_edge = util.reverse_complement(curr_seq) + e
+        if fives.get(combined_edge[-5:], False) or sevens.get(combined_edge[-7:], False):
+             return False       
+
+        for pos in range(0,len(e)):
+
+            p_ = fives.get(combined_edge[:-pos][-5:], False)   # pentameric unit exists
+            s_ = sevens.get(combined_edge[:-pos][-7:], False)  # septameric unit exists
+
+            if p_ or s_: 
+                return False
+    return True
+
+
 
 
 
@@ -230,7 +264,9 @@ def gen_string(strand_length, blueprint, complement_desired, front_edges=[], com
     new_strand = ""
     
     attempt = 1
+
     while(attempt < 30):
+
         while (len(new_strand) < strand_length):
  
             next_possible_base = get_next_base(blueprint, blueprint_violation_array, new_strand, complement_desired, front_edges, complement_front_edges)
@@ -275,7 +311,8 @@ def gen_string(strand_length, blueprint, complement_desired, front_edges=[], com
                     new_strand = ""
                     break
 
-        if len(new_strand) == strand_length:
+        if len(new_strand) == strand_length :#and backedge_check(new_strand, back_edges, complement_back_edges):
+
             #print("\norder completed at attempt #: " + str(attempt))                
             return str(new_strand)
 
@@ -380,12 +417,7 @@ print("\n\nlength of fives used: "+ str(sum(fives.values())))
 
 
 #test2
-test2 = gen_string(77, "", True ,["ATAAGC",' ATATA','GGGGGG'])
-print(test2)
-
-test3 = gen_string(17, "", True)
-print(test3)
-
+# `
 
 # print("\nresult: " + test2)
 # print("length of fives used: "+ str(sum(fives.values())))

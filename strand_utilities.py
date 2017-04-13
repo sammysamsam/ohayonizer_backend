@@ -107,10 +107,9 @@ class strand_utilities:
 
 #TEST AREA 
 
-"""
-util = strand_utilities()
 
-print(util.palindrome_check("TGGCCA"))
-print(util.palindrome_check("AAAT"))
-print(util.palindrome_check("AAA"))
-"""
+# util = strand_utilities()
+
+# print(util.get_new_restriction_score('AAA',"A"))
+# print(util.palindrome_check("AAAT"))
+# print(util.palindrome_check("AAA"))
