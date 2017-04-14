@@ -131,7 +131,7 @@ def generate_strands(component_list, full_strand_recipe):
 
     """
     attempts = 0
-    while attempts < 300:
+    while attempts < 2000:
         fail = False
         index = 0
         while index < len(component_list):
@@ -187,14 +187,16 @@ def assembleFullStrands(component_list, full_strand_recipe):
             for c in component_list:
                 if c['name'] == comp_name:
                     seq += c['sequence']
-                    found = True    
+                    found = True   
+                    break 
                 elif c['name'] + "'" == comp_name:            
                     seq += util.reverse_complement(c['sequence'])
                     found = True
+                    break
             if not found:
                 print(' COULD NOT FIND '+ comp_name) 
 
-            fullstrands[name] = seq
+        fullstrands[name] = seq
 
     #pprint.pprint(fullstrands)
     return fullstrands
@@ -213,17 +215,18 @@ b = {'name':'b', 'length':12, 'blueprint':"", 'complement':True, 'sequence':''}
 c = {'name':'c', 'length':8, 'blueprint':"", 'complement':True, 'sequence':''}
 f = {'name':'f', 'length':5, 'blueprint':"", 'complement':True, 'sequence':''}
 x = {'name':'x', 'length':5, 'blueprint':"", 'complement':True, 'sequence':''}
+w = {'name':'w', 'length':5, 'blueprint':"", 'complement':True, 'sequence':''}
 j = {'name':'j', 'length':8, 'blueprint':"", 'complement':True, 'sequence':''}
 
-component_list = [y,b,e,d,g,z,a,c,f,x,j]
+component_list = [y,b,e,w,d,g,z,a,c,f,x,j]
 
 full_strand_recipe = [ ['b'] , ['d'] ]
-full_strand_recipe += [ ["d'", "z'"] , ["c'", 'a'] , ["a'", 'c'] , ["d'", 'y'] , ["b'", "a'"] , ["j","y"], ["j'","y'"]]
+full_strand_recipe += [ ["d'", "z'"] , ["c'", 'a'] , ["a'", "c"] , ["d'", 'y'] , ["b'", "a'"] , ["j","y"], ["j'","y'"]]
 full_strand_recipe += [ ["e'", "y'", 'd'] ]
 full_strand_recipe += [ ['a', 'b', "e'", 'z', 'd'] , ["d'", 'y', 'e', "b'"] ]  
-full_strand_recipe += [ ["g'", 'x', "f'","d'"] , ["y'", 'x','f', "d'"] ]
-
-#print(full_strand_recipe)
+full_strand_recipe += [ ["g'", 'x', "f","d'"] , ["y'", 'd','f', "w", 'g'] ]
+print (full_strand_recipe)
+#print(full_strand_recipe) D, d’z’, c’a, a’c, abe’zd, d’yeb’, b’a’, b, e’y’d, d’y, y’dfwg, g’xf’d’
 
 results = generate_strands(component_list, full_strand_recipe)
 component_list = results[0]

@@ -311,7 +311,7 @@ def gen_string(strand_length, blueprint, complement_desired, front_edges=[], com
                     new_strand = ""
                     break
 
-        if len(new_strand) == strand_length :#and backedge_check(new_strand, back_edges, complement_back_edges):
+        if len(new_strand) == strand_length: #and ( backedge_check(new_strand, back_edges, complement_back_edges)):
 
             #print("\norder completed at attempt #: " + str(attempt))                
             return str(new_strand)
