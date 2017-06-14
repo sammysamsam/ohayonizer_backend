@@ -90,12 +90,12 @@ class strand_utilities:
                     score += 1
 
         #palindrome check
-        if(seq_len > 4):
-            six = new_seq[seq_len-4:]
+        if(seq_len >= 4):
+            six = new_seq[-4:]
             if e_.palindrome_check(six):
-                score += 1
+                score += 2
                 if six in seq:
-                    score += 1
+                    score += 3
 
         return score
 
@@ -107,10 +107,9 @@ class strand_utilities:
 
 #TEST AREA 
 
-"""
-util = strand_utilities()
 
-print(util.palindrome_check("TGGCCA"))
-print(util.palindrome_check("AAAT"))
-print(util.palindrome_check("AAA"))
-"""
+# util = strand_utilities()
+
+# print(util.get_new_restriction_score('AAA',"A"))
+# print(util.palindrome_check("AAAT"))
+# print(util.palindrome_check("AAA"))
