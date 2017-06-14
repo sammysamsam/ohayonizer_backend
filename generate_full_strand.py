@@ -109,7 +109,7 @@ def assembleFullStrands(component_list, full_strand_recipe):
     pprint.pprint(fullstrands)
     return fullstrands
 
-C=8; A/E/Z/Y = 5; B/D = 15; S = 6 or 7
+#C=8; A/E/Z/Y = 5; B/D = 15; S = 6 or 7
 
 #---------------------EXPERIMENT-----------------------------------------------------------------------------------------
 
