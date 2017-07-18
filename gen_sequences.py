@@ -17,6 +17,7 @@ ADDED_UNITS = {}
 FIVES = {}
 SEVENS = {}
 
+
 def gen_restricted_sequences():
     """
     generate sequences that are known to cause issues in specific
@@ -42,7 +43,7 @@ def gen_restricted_sequences():
 RESTRICTED_SEQ = gen_restricted_sequences()
 
 
-def genFIVES():
+def gen_fives():
     """
     generates all possible non restricted five nucleotide units as key and values = FALSE into
     global FIVES variable
@@ -76,7 +77,7 @@ def genFIVES():
     # print("Length of FIVES: " + str(len(FIVES)) )
 
 
-def genSEVENS():
+def gen_sevens():
     """
     generates all possible non restricted seven nucleotide units as key and value = FALSE into global SEVENS variable
 
@@ -247,14 +248,14 @@ def get_next_base(blueprint, blueprint_violation_array, curr_seq, complement_des
         # update backtrack variables
         for e in front_edges:
             if e == '':
-                ADDED_UNITS[len(curr_seq)] += update_FIVES( (curr_seq)[-4:] + chosen_base, complement_desired)
-                ADDED_UNITS[len(curr_seq)] += update_SEVENS( (curr_seq)[-6:] + chosen_base, complement_desired)
+                ADDED_UNITS[len(curr_seq)] += update_fives( (curr_seq)[-4:] + chosen_base, complement_desired)
+                ADDED_UNITS[len(curr_seq)] += update_sevens( (curr_seq)[-6:] + chosen_base, complement_desired)
             else:
-                ADDED_UNITS[len(curr_seq)] += update_FIVES( (e + curr_seq)[-4:] + chosen_base, False)
-                ADDED_UNITS[len(curr_seq)] += update_SEVENS( (e + curr_seq)[-6:] + chosen_base, False)
+                ADDED_UNITS[len(curr_seq)] += update_fives( (e + curr_seq)[-4:] + chosen_base, False)
+                ADDED_UNITS[len(curr_seq)] += update_sevens( (e + curr_seq)[-6:] + chosen_base, False)
         for e in complement_front_edges:
-            ADDED_UNITS[len(curr_seq)] += update_FIVES( ( e + util.reverse_complement(curr_seq))[-4:] + util.complement(chosen_base), False)
-            ADDED_UNITS[len(curr_seq)] += update_SEVENS( (e + util.reverse_complement(curr_seq))[-6:] + util.complement(chosen_base), False)
+            ADDED_UNITS[len(curr_seq)] += update_fives( ( e + util.reverse_complement(curr_seq))[-4:] + util.complement(chosen_base), False)
+            ADDED_UNITS[len(curr_seq)] += update_sevens( (e + util.reverse_complement(curr_seq))[-6:] + util.complement(chosen_base), False)
 
         if(len(next_possible_bases) > 1):
             next_possible_bases.remove(chosen_base)
@@ -355,8 +356,8 @@ def gen_string(strand_length, blueprint, complement_desired, front_edges=[], com
                     new_strand += backtrack_unit
 
                     # Update added units
-                    ADDED_UNITS[curr_length] = update_FIVES(prev_4 + backtrack_unit, complement_desired) + \
-                                               update_SEVENS(prev_6 + backtrack_unit, complement_desired)
+                    ADDED_UNITS[curr_length] = update_fives(prev_4 + backtrack_unit, complement_desired) + \
+                                               update_sevens(prev_6 + backtrack_unit, complement_desired)
 
                     # Update backtrack variables
                     if len(backtrack_bases) > 1:
@@ -411,7 +412,7 @@ def revert_units(curr_seq, rev_seq, added_bases):
                 SEVENS[unit] = False
 
 
-def update_FIVES(new_unit, complement_desired):
+def update_fives(new_unit, complement_desired):
     """
     Updates the FIVES data structure with the new string
     :param new_unit:
@@ -433,7 +434,7 @@ def update_FIVES(new_unit, complement_desired):
     return unit_list
 
 
-def update_SEVENS(new_unit, complement_desired):
+def update_sevens(new_unit, complement_desired):
 
     """
     Updates the SEVENS data structure with the new string
@@ -446,15 +447,15 @@ def update_SEVENS(new_unit, complement_desired):
     unit_list = []
     if len(new_unit) == 7:
         if complement_desired and (not SEVENS.get(new_unit, True)):
-            unit_list.extend(update_SEVENS_approx(new_unit))
+            unit_list.extend(update_sevens_approx(new_unit))
 
         new_reverse_unit = util.reverse_complement(new_unit) 
         if not SEVENS.get(new_reverse_unit, True):
-            unit_list.extend(update_SEVENS_approx(new_reverse_unit))
+            unit_list.extend(update_sevens_approx(new_reverse_unit))
     return unit_list
 
 
-def update_SEVENS_approx(new_unit):
+def update_sevens_approx(new_unit):
     """
     Updates the SEVENS aprox data structure with the new string
     :param new_unit:
@@ -477,12 +478,8 @@ def update_SEVENS_approx(new_unit):
 
 if __name__ == '__main__':
 
-
-    genFIVES()
-    genSEVENS()
-
-    # print ("total FIVES: "+ str(len(FIVES)))
-    # print ("total SEVENS: "+ str(len(SEVENS)) + "\n")
+    gen_fives()
+    gen_sevens()
 
     # test1
     test_str = "GGoATooooAAAAooooAoAToGGoGGGoGooooATGCoo"
@@ -491,20 +488,15 @@ if __name__ == '__main__':
     print("total FIVES: "+ str(len(FIVES)))
     test2 = gen_string(40, test_str, True)
 
-    """
-    print(test2)
-    test_str_2 = "oCCCooooooooooooooATTooGGGoooGGGooooooooooo"
-    print("\n\nlength of FIVES used: "+ str(sum(FIVES.values())))
-    print ("total FIVES: "+ str(len(FIVES)))
-    test = gen_string(43, test_str_2, True)
-    print(test)
-    print("\n\nlength of FIVES used: "+ str(sum(FIVES.values())))
-    """
 
+    # test_str_2 = "oCCCooooooooooooooATTooGGGoooGGGooooooooooo"
+    # print("\n\nlength of FIVES used: "+ str(sum(FIVES.values())))
+    # print ("total FIVES: "+ str(len(FIVES)))
+    # test = gen_string(43, test_str_2, True)
+    # print(test)
+    # print("\n\nlength of FIVES used: "+ str(sum(FIVES.values())))
 
     # test2
-    #
-
     # print("\nresult: " + test2)
     # print("length of FIVES used: "+ str(sum(FIVES.values())))
     # print("length of SEVENS used: "+ str(sum(SEVENS.values())))
@@ -529,10 +521,9 @@ if __name__ == '__main__':
     # print("3: " + test4)
     # print("4: " + test5)
 
-"""
-#test3
-for i in range(0, 10):
-    #print gen_string(size_of_strand,"",True)
-    #print("pentameric units remaining:" + str(FIVES.values().count(False)))
-    #print("septameric units remaining:" + str(SEVENS.values().count(False)))   
-"""
+    # #test3
+    # for i in range(0, 10):
+    #     #print gen_string(size_of_strand,"",True)
+    #     #print("pentameric units remaining:" + str(FIVES.values().count(False)))
+    #     #print("septameric units remaining:" + str(SEVENS.values().count(False)))
+    #

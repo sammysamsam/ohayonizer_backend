@@ -112,14 +112,14 @@ def get_next_base(n, m, blueprint, blueprint_violation_array, curr_seq, curr_len
     # case: next base is NOT blueprint base but unit contain blueprint bases
     next_possible_bases = []
     for base in 'ACGT':    
-        n_unit = curr_seq[len(n_mer-1):] + base         # test new n unit
-        m_unit = curr_seq[len(n_mer-1):] + base         # test new m unit
+        n_unit = curr_seq[n-1:] + base         # test new n unit
+        m_unit = curr_seq[m-1:] + base         # test new m unit
         
         # new base creates unwanted restricted sequence
         new_score = util.get_new_restriction_score(curr_seq, base, complement_desired)        
 
-        n_ = nmers[n_unit]   # n unit exists
-        m_ = mmers[m_unit]  # m unit exists
+        if nmers.get(n_unit, False) or mmers.get(m_unit, False):
+            continue
 
         # CHECK: new unit's reverse complement exists
         if complement_desired:
@@ -140,10 +140,20 @@ def get_next_base(n, m, blueprint, blueprint_violation_array, curr_seq, curr_len
 #####################
 
 
-# generates a new string of size n that doesn't intersect with existing strings
-# those other strings are encoded in the fives
+
 
 def gen_strand(strand_length, blueprint, complement_desired, n, m):
+    """
+    generates a new string of size n that doesn't intersect with existing strings those other strings are encoded in
+    the fives
+
+    :param strand_length: int
+    :param blueprint: str[]
+    :param complement_desired: bool
+    :param n: int
+    :param m: int
+    :return: str
+    """
     global all_strings
     global nmers
     global sevens
@@ -161,13 +171,14 @@ def gen_strand(strand_length, blueprint, complement_desired, n, m):
             added_units = {}
 
 
-            next_possible_base = get_next_base(n_size, m_size, blueprint, blueprint_violation_array, new_strand, complement_desired, front_edges, complement_front_edges)
+            next_possible_base = get_next_base(n_size, m_size, blueprint, blueprint_violation_array,
+                                               new_strand, complement_desired, front_edges, complement_front_edges)
 
-            #CASE: add possible base (CONTINUE)
+            # CASE: add possible base (CONTINUE)
             if next_possible_base != "":
                 new_strand += next_possible_base
 
-            #CASE: not possible base (BACKTRACK)
+            # CASE: not possible base (BACKTRACK)
             else:
                 backtrack_index = len(backtrack_array) - 1
 
@@ -177,56 +188,65 @@ def gen_strand(strand_length, blueprint, complement_desired, n, m):
                     backtrack_bases = backtrack_array[backtrack_index]
                     backtrack_unit = random.choice(backtrack_bases)
 
-                    #Backtrack Sequence              
+                    # Backtrack Sequence
                     new_strand = backtrack_seq[backtrack_index]
                     curr_length = len(new_strand)
 
-                    #Replace removed base with alternate base
+                    # Replace removed base with alternate base
                     prev_4 = new_strand[len(new_strand) - 4:] 
                     prev_6 = ''                   
                     if curr_length >= 6:
                         prev_6 = new_strand[len(new_strand) - 6:] 
                     new_strand += backtrack_unit
 
-                    #Update added units
+                    # Update added units
                     added_units[curr_length] = update_fives(prev_4 + backtrack_unit, complement_desired) + update_sevens(prev_6 + backtrack_unit, complement_desired)
 
-                    #Update backtrack variables
-                    if(len(backtrack_bases) > 1):
+                    # Update backtrack variables
+                    if (len(backtrack_bases) > 1):
                         backtrack_bases.remove(backtrack_unit)
                         backtrack_array[backtrack_index] = backtrack_bases
                     else:
                         backtrack_seq.pop()
                         backtrack_array.pop()
                 else:
-                    #print("stoped at: "+new_strand + "\n***ATTEMPT #"+str(attempt)+"***\n")       
+                    # print("stoped at: "+new_strand + "\n***ATTEMPT #"+str(attempt)+"***\n")
                     new_strand = ""
                     break
 
-        if len(new_strand) == strand_length: #and (( backedge_check(new_strand, back_edges, complement_back_edges)) or not 'o' in blueprint):          
+        if len(new_strand) == strand_length:
+            # and (( backedge_check(new_strand, back_edges, complement_back_edges)) or not 'o' in blueprint):
             return str(new_strand)
 
         revert_units(new_strand, "", added_units, complement_desired)             
         attempt += 1
 
-    #print( "Could not generate a string in "+ str(attempt) + " attempts." )
+    # print( "Could not generate a string in "+ str(attempt) + " attempts." )
     return ""
   
 
 #####################
 
 def revert_units(curr_seq, rev_seq, added_bases, complement_desired):
+    """
+    remove the added nmer and mmer units that were added to rev_seq to create curr_seq. (this
+    :param curr_seq:
+    :param rev_seq:
+    :param added_bases:
+    :param complement_desired:
+    :return:
+    """
     global fives
     global sevens
 
     curr_len = len(curr_seq)
     rev_len = len(rev_seq)
 
-    #print("backtrack to sequence:\n# "+rev_seq+"\n")
+    # print("backtrack to sequence:\n# "+rev_seq+"\n")
     for curr_index in range( rev_len, curr_len):
         for unit in added_bases[curr_index]:
 
-            #print("remove: "+unit)
+            # print("remove: "+unit)
             if len(unit) == 5:
                 fives[unit] = False
             else:
@@ -234,14 +254,14 @@ def revert_units(curr_seq, rev_seq, added_bases, complement_desired):
 
 
 def update_nmers(new_unit, complement_desired, nmers, n):
-    ''' n is length of nmers '''
+
     unit_list = []
     if len(new_unit) == n:
         if complement_desired and (not nmers.get(new_unit, True)):
             unit_list.extend(update_nmers_approx(new_unit, nmers, n))
 
         new_reverse_unit = util.reverse_complement(new_unit)
-        if (not nmers.get(new_reverse_unit, True)):
+        if not nmers.get(new_reverse_unit, True):
             unit_list.extend(update_nmers_approx(new_reverse_unit, nmers, n))
     return unit_list
 
@@ -253,7 +273,7 @@ def update_nmers_approx(new_unit, nmers, n):
     while i < n:
         for let in lets:
             new = new_unit[:i] + let + new_unit[i + 1:]
-            if (not nmers.get(new, True)):
+            if not nmers.get(new, True):
                 nmers[new] = True
                 unit_list.append(new)
         i += 1
@@ -265,71 +285,71 @@ def update_nmers_approx(new_unit, nmers, n):
 
 
 ########          MAIN METHOD        ############## 
-
-fives = {}
-sevens = {}
-all_strings = []
-size_of_strand = 50
-
-genfives()
-gensevens()
-print ("total fives: "+ str(len(fives)))
-print ("total sevens: "+ str(len(sevens)) + "\n")
-
-nmers = gen_nmers(fives)
-mmers = gen_nmers(sevens)
-
-"""
-#test1
-test_str = "GGoATooooAAAAooooAoAToGGoGGGoGooooATGCoo"
-test_str_2 = "oCCCooooooooooooooATTooGGGoooGGGooooooooooo"
-
-print("blueprint violation array: " + str(get_blueprint_violation_array(test_str)))
-
-print ("total fives: "+ str(len(fives)))
-test2 = gen_string(40, test_str, True)
-print(test2)
-print("\n\nlength of fives used: "+ str(sum(fives.values())))
-
-print ("total fives: "+ str(len(fives)))
-test = gen_string(43, test_str_2, True)
-print(test)
-print("\n\nlength of fives used: "+ str(sum(fives.values())))
+#
+# fives = {}
+# sevens = {}
+# all_strings = []
+# size_of_strand = 50
+#
+# genfives()
+# gensevens()
+#
+# print ("total fives: "+ str(len(fives)))
+# print ("total sevens: "+ str(len(sevens)) + "\n")
+#
+# nmers = gen_nmers(fives)
+# mmers = gen_nmers(sevens)
 
 
-"""
+# # test1
+# test_str = "GGoATooooAAAAooooAoAToGGoGGGoGooooATGCoo"
+# test_str_2 = "oCCCooooooooooooooATTooGGGoooGGGooooooooooo"
+#
+# print("blueprint violation array: " + str(get_blueprint_violation_array(test_str)))
+#
+# print ("total fives: "+ str(len(fives)))
+# test2 = gen_string(40, test_str, True)
+# print(test2)
+# print("\n\nlength of fives used: "+ str(sum(fives.values())))
+#
+# print ("total fives: "+ str(len(fives)))
+# test = gen_string(43, test_str_2, True)
+# print(test)
+# print("\n\nlength of fives used: "+ str(sum(fives.values())))
 
-#test2
 
-test2 = gen_string(100, "", True)
-print("\nresult: " + test2)
-print("length of fives used: "+ str(sum(fives.values())))
-print("length of sevens used: "+ str(sum(sevens.values())))
 
-test3 = gen_string(100, "", True)
-print("\nresult: " + test3)
-print("length of fives used: "+ str(sum(fives.values())))
-print("length of sevens used: "+ str(sum(sevens.values())))
+#
+# #test2
+#
+# test2 = gen_string(100, "", True)
+# print("\nresult: " + test2)
+# print("length of fives used: "+ str(sum(fives.values())))
+# print("length of sevens used: "+ str(sum(sevens.values())))
+#
+# test3 = gen_string(100, "", True)
+# print("\nresult: " + test3)
+# print("length of fives used: "+ str(sum(fives.values())))
+# print("length of sevens used: "+ str(sum(sevens.values())))
+#
+# test4 = gen_string(100, "", True)
+# print("\nresult: " + test4)
+# print("length of fives used: "+ str(sum(fives.values())))
+# print("length of sevens used: "+ str(sum(sevens.values())))
+#
+# test5 = gen_string(100, "", True)
+# print("\nresult: " + test5)
+# print("length of fives used: "+ str(sum(fives.values())))
+# print("length of sevens used: "+ str(sum(sevens.values())))
+#
+# print("\n___________\n1: " + test2)
+# print("2: " + test3)
+# print("3: " + test4)
+# print("4: " + test5)
 
-test4 = gen_string(100, "", True)
-print("\nresult: " + test4)
-print("length of fives used: "+ str(sum(fives.values())))
-print("length of sevens used: "+ str(sum(sevens.values())))
 
-test5 = gen_string(100, "", True)
-print("\nresult: " + test5)
-print("length of fives used: "+ str(sum(fives.values())))
-print("length of sevens used: "+ str(sum(sevens.values())))
-
-print("\n___________\n1: " + test2)
-print("2: " + test3)
-print("3: " + test4)
-print("4: " + test5)
-
-"""
-#test3
-for i in range(0, 10):
-    #print gen_string(size_of_strand,"",True)
-    #print("pentameric units remaining:" + str(fives.values().count(False)))
-    #print("septameric units remaining:" + str(sevens.values().count(False)))   
-"""
+# test3
+# for i in range(0, 10):
+#     #print gen_string(size_of_strand,"",True)
+#     #print("pentameric units remaining:" + str(fives.values().count(False)))
+#     #print("septameric units remaining:" + str(sevens.values().count(False)))
