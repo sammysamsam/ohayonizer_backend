@@ -255,6 +255,49 @@ def assembleFullStrands(component_list, full_strand_recipe):
 # print('],"FSL":[]}')
 
 
+=======
+# d = {'name':'d', 'length':15, 'blueprint':"ATCAAGCATAGTATC", 'complement':True, 'sequence':''}
+# g = {'name':'g', 'length':15, 'blueprint':"TCACAGAACCATCCA", 'complement':True, 'sequence':''}
+# e = {'name':'e', 'length':5, 'blueprint':"GTAAG", 'complement':True, 'sequence':''}
+# z = {'name':'z', 'length':5, 'blueprint':"AGGTT", 'complement':True, 'sequence':''}
+# y = {'name':'y', 'length':5, 'blueprint':"TATGA", 'complement':True, 'sequence':''}
+# a = {'name':'a', 'length':5, 'blueprint':"TCCAG", 'complement':True, 'sequence':''}
+# b = {'name':'b', 'length':12, 'blueprint':"AATCTAATAACC", 'complement':True, 'sequence':''}
+# c = {'name':'c', 'length':8, 'blueprint':"GCGTGGTG", 'complement':True, 'sequence':''}
+# f = {'name':'f', 'length':5, 'blueprint':"GCTTC", 'complement':True, 'sequence':''}
+# x = {'name':'x', 'length':5, 'blueprint':"CCTTA", 'complement':True, 'sequence':''}
+# w = {'name':'w', 'length':5, 'blueprint':"TAACA", 'complement':True, 'sequence':''}
+# j = {'name':'j', 'length':8, 'blueprint':"TGTGTTCG", 'complement':True, 'sequence':''}
+# s = {'name':'s', 'length':7, 'blueprint':"", 'complement':True, 'sequence':''}
+
+# component_list = [y,b,e,w,d,g,z,a,c,f,x,j]
+
+# full_strand_recipe = [ ['b'] , ['d'] ]
+# full_strand_recipe += [ ["d'", "z'"] , ["c'", 'a'] , ["a'", "c"] , ["d'", 'y'] , ["b'", "a'"] , ["j","y"], ["j'","y'"]]
+# full_strand_recipe += [ ["e'", "y'", 'd'] ]
+# full_strand_recipe += [ ['a', 'b', "e'", 'z', 'd', "s'"] , ['s', "d'", 'y', 'e', "b'"] ]  
+# full_strand_recipe += [ ["g'", 'x', "f","d'"] , ["y'", 'd','f', "w", 'g'] ]
+# print (full_strand_recipe)
+# #print(full_strand_recipe) D, d’z’, c’a, a’c, abe’zd, d’yeb’, b’a’, b, e’y’d, d’y, y’dfwg, g’xf’d’
+
+# results = generate_strands(component_list, full_strand_recipe)
+# component_list = results[0]
+# full_strand_list = results[1]
+
+# for x in component_list:
+#     del x['blueprint']
+#     del x['length']
+
+
+# pprint.pprint(component_list)
+
+# count = 0
+# print('{"CL":[')
+# for temp in full_strand_list:
+#     count +=1
+#     print('{"name": "' + temp.replace("'","`") + '", "sequence": "'+full_strand_list[temp] + '", "complement": "false"},')
+# print('],"FSL":[]}')
+
 
 #-------------------------TEST-------------------------------------------------------------------------------------
 
